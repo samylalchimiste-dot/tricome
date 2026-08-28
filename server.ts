@@ -4549,8 +4549,8 @@ function getTelegramAppUrl(): string {
     return process.env.APP_URL!.trim();
   }
 
-  // Active public URL for the mini-app (Public Shared preview or deployed URL)
-  return 'https://ais-pre-vxlfxvvv6m5qf5k6mzsfkc-858781160855.europe-west2.run.app';
+  // Active public URL for the mini-app (Production Railway URL)
+  return 'https://tricome-production.up.railway.app';
 }
 
 function formatTelegramButton(label?: string, targetUrl?: string, fallbackLabel = "🛒 Accéder au Shop 🛍️"): any {
@@ -5220,7 +5220,7 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
         if (!photoSucceeded) {
           const fallbackPhotoUrl = (logoUrl && logoUrl.startsWith('http')) 
             ? logoUrl 
-            : 'https://st-production-a9ae.up.railway.app/secret_farmz_logo.jpg';
+            : 'https://tricome-production.up.railway.app/tricoma_logo.png';
           try {
             const photoPayload = {
               chat_id: chatId,

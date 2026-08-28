@@ -2993,7 +2993,7 @@ export default function AdminPanel({
                       type="text"
                       value={settings.customAppUrl || ''}
                       onChange={(e) => setBrandingSettings({ ...settings, customAppUrl: e.target.value })}
-                      placeholder="https://st-production-a9ae.up.railway.app (par défaut)"
+                      placeholder="https://tricome-production.up.railway.app (par défaut)"
                       className="w-full text-[9px] py-1.5 px-2.5 rounded bg-black border border-[#222] focus:border-[#D4AF37] text-white outline-none font-mono"
                     />
                   </div>
