@@ -1,0 +1,6 @@
+{
+  "name": "TRICOMA AL ANASSAR",
+  "description": "TRICOMA AL ANASSAR — Réserve Privée d'Exception: Extractions rares, fleurs de collection et catalogue VIP exclusif.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
