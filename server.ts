@@ -1589,10 +1589,12 @@ const DEFAULT_SETTINGS = {
     { id: '1', text: 'LA RÉSERVE PRIVÉE', category: 'All', size: 'L', color: '#D4AF37', enabled: true, order: 1 },
     { id: '2', text: 'SELECTION DRY SIFT', category: 'DRY SIFT', size: 'L', color: '#D4AF37', enabled: true, order: 2 },
     { id: '3', text: 'SELECTION BELDIA', category: 'BELDIA', size: 'L', color: '#D4AF37', enabled: true, order: 3 },
-    { id: '4', text: 'SELECTION FROZEN', category: 'FROZEN', size: 'L', color: '#D4AF37', enabled: true, order: 4 },
-    { id: '5', text: 'SELECTION STATIC', category: 'STATIC', size: 'L', color: '#D4AF37', enabled: true, order: 5 },
-    { id: '6', text: 'MEET UP RABAT', category: 'MEET UP RABAT', size: 'L', color: '#D4AF37', enabled: true, order: 6 },
-    { id: '7', text: 'ACCESSOIRES', category: 'ACCESSOIRES', size: 'L', color: '#D4AF37', enabled: true, order: 7 },
+    { id: '4', text: 'SELECTION LA MOUSSE', category: 'LA MOUSSE', size: 'L', color: '#D4AF37', enabled: true, order: 4 },
+    { id: '5', text: 'SELECTION FROZEN', category: 'FROZEN', size: 'L', color: '#D4AF37', enabled: true, order: 5 },
+    { id: '6', text: 'SELECTION STATIC', category: 'STATIC', size: 'L', color: '#D4AF37', enabled: true, order: 6 },
+    { id: '7', text: 'SELECTION WPFF', category: 'WPFF', size: 'L', color: '#D4AF37', enabled: true, order: 7 },
+    { id: '8', text: 'MEET UP RABAT', category: 'MEET UP RABAT', size: 'L', color: '#D4AF37', enabled: true, order: 8 },
+    { id: '9', text: 'ACCESSOIRES', category: 'ACCESSOIRES', size: 'L', color: '#D4AF37', enabled: true, order: 9 },
   ]
 };
 
@@ -2768,12 +2770,14 @@ async function syncLocalToFirestoreIfNeeded() {
         if (!data.sectionTitles || data.sectionTitles.length === 0 || hasStaleSection) {
           data.sectionTitles = [
             { id: '1', text: 'LA RÉSERVE PRIVÉE', category: 'All', size: 'L', color: '#D4AF37', enabled: true, order: 1 },
-            { id: '2', text: 'SELECTION DRY SIFT', category: 'DRY SIFT', size: 'L', color: '#D4AF37', enabled: true, order: 2 },
-            { id: '3', text: 'SELECTION BELDIA', category: 'BELDIA', size: 'L', color: '#D4AF37', enabled: true, order: 3 },
-            { id: '4', text: 'SELECTION FROZEN', category: 'FROZEN', size: 'L', color: '#D4AF37', enabled: true, order: 4 },
-            { id: '5', text: 'SELECTION STATIC', category: 'STATIC', size: 'L', color: '#D4AF37', enabled: true, order: 5 },
-            { id: '6', text: 'MEET UP RABAT', category: 'MEET UP RABAT', size: 'L', color: '#D4AF37', enabled: true, order: 6 },
-            { id: '7', text: 'ACCESSOIRES', category: 'ACCESSOIRES', size: 'L', color: '#D4AF37', enabled: true, order: 7 },
+            { id: '2', text: 'SELECTION LA MOUSSE', category: 'LA MOUSSE', size: 'L', color: '#D4AF37', enabled: true, order: 2 },
+            { id: '3', text: 'SELECTION DRY SIFT', category: 'DRY SIFT', size: 'L', color: '#D4AF37', enabled: true, order: 3 },
+            { id: '4', text: 'SELECTION BELDIA', category: 'BELDIA', size: 'L', color: '#D4AF37', enabled: true, order: 4 },
+            { id: '5', text: 'SELECTION FROZEN', category: 'FROZEN', size: 'L', color: '#D4AF37', enabled: true, order: 5 },
+            { id: '6', text: 'SELECTION STATIC', category: 'STATIC', size: 'L', color: '#D4AF37', enabled: true, order: 6 },
+            { id: '7', text: 'SELECTION WPFF', category: 'WPFF', size: 'L', color: '#D4AF37', enabled: true, order: 7 },
+            { id: '8', text: 'MEET UP RABAT', category: 'MEET UP RABAT', size: 'L', color: '#D4AF37', enabled: true, order: 8 },
+            { id: '9', text: 'ACCESSOIRES', category: 'ACCESSOIRES', size: 'L', color: '#D4AF37', enabled: true, order: 9 },
           ];
           needsUpdate = true;
         }
@@ -2796,20 +2800,22 @@ async function syncLocalToFirestoreIfNeeded() {
       } else {
         // Document does not exist in Firestore but we successfully queried it, so seed default settings
         const targetSettings = {
-          introBgUrl: '/secret_farmz_hero.jpg',
-          launchScreenUrl: '/secret_farmz_hero.jpg',
-          homepageHeroBgUrl: '/secret_farmz_hero.jpg',
-          logoUrl: '/secret_farmz_logo.jpg',
+          introBgUrl: '/tricoma_logo.png',
+          launchScreenUrl: '/tricoma_logo.png',
+          homepageHeroBgUrl: '/tricoma_logo.png',
+          logoUrl: '/tricoma_logo.png',
           adminPassword: 'omerta2026',
-          introStatusLine: 'DRYTECH — PRIVATE RESERVE',
+          introStatusLine: 'TRICOMA AL ANASSAR — RÉSERVE PRIVÉE',
           sectionTitles: [
             { id: '1', text: 'LA RÉSERVE PRIVÉE', category: 'All', size: 'L', color: '#D4AF37', enabled: true, order: 1 },
-            { id: '2', text: 'SELECTION DRY SIFT', category: 'DRY SIFT', size: 'L', color: '#D4AF37', enabled: true, order: 2 },
-            { id: '3', text: 'SELECTION BELDIA', category: 'BELDIA', size: 'L', color: '#D4AF37', enabled: true, order: 3 },
-            { id: '4', text: 'SELECTION FROZEN', category: 'FROZEN', size: 'L', color: '#D4AF37', enabled: true, order: 4 },
-            { id: '5', text: 'SELECTION STATIC', category: 'STATIC', size: 'L', color: '#D4AF37', enabled: true, order: 5 },
-            { id: '6', text: 'MEET UP RABAT', category: 'MEET UP RABAT', size: 'L', color: '#D4AF37', enabled: true, order: 6 },
-            { id: '7', text: 'ACCESSOIRES', category: 'ACCESSOIRES', size: 'L', color: '#D4AF37', enabled: true, order: 7 },
+            { id: '2', text: 'SELECTION LA MOUSSE', category: 'LA MOUSSE', size: 'L', color: '#D4AF37', enabled: true, order: 2 },
+            { id: '3', text: 'SELECTION DRY SIFT', category: 'DRY SIFT', size: 'L', color: '#D4AF37', enabled: true, order: 3 },
+            { id: '4', text: 'SELECTION BELDIA', category: 'BELDIA', size: 'L', color: '#D4AF37', enabled: true, order: 4 },
+            { id: '5', text: 'SELECTION FROZEN', category: 'FROZEN', size: 'L', color: '#D4AF37', enabled: true, order: 5 },
+            { id: '6', text: 'SELECTION STATIC', category: 'STATIC', size: 'L', color: '#D4AF37', enabled: true, order: 6 },
+            { id: '7', text: 'SELECTION WPFF', category: 'WPFF', size: 'L', color: '#D4AF37', enabled: true, order: 7 },
+            { id: '8', text: 'MEET UP RABAT', category: 'MEET UP RABAT', size: 'L', color: '#D4AF37', enabled: true, order: 8 },
+            { id: '9', text: 'ACCESSOIRES', category: 'ACCESSOIRES', size: 'L', color: '#D4AF37', enabled: true, order: 9 },
           ]
         };
         if (!isFirestoreWriteDisabled) {

@@ -43,10 +43,11 @@ export default function CatalogView({
       { id: 'frozensift', label: 'FROZEN SIFT PREMIUM', query: 'Frozen', emoji: '🧊' },
       { id: 'wppf', label: 'WPPF', query: 'WPFF', emoji: '🧈' },
       { id: 'static', label: 'STATIC', query: 'Static', emoji: '🧤' },
-      { id: 'beldia', label: 'BELDIA', query: 'Beldia', emoji: '🇲🇦' }
+      { id: 'beldia', label: 'BELDIA', query: 'Beldia', emoji: '🇲🇦' },
+      { id: 'mousse', label: 'LA MOUSSE', query: 'La Mousse', emoji: '🫧' }
     ];
 
-    const knownIds = new Set(['all', 'drysift', 'frozensift', 'wppf', 'static', 'beldia']);
+    const knownIds = new Set(['all', 'drysift', 'frozensift', 'wppf', 'static', 'beldia', 'mousse']);
 
     (products || []).forEach((p) => {
       if (p.category && p.category.trim()) {
@@ -54,6 +55,7 @@ export default function CatalogView({
         const cLower = cTrim.toLowerCase();
         
         const isKnown =
+          cLower.includes('mousse') ||
           cLower.includes('dry') ||
           cLower.includes('sift') ||
           cLower.includes('frozen') ||
@@ -96,6 +98,8 @@ export default function CatalogView({
         let matchesCategory = false;
         if (selCat === 'tous' || selCat === 'all' || selCat === t('categoryAll').toLowerCase() || !selCat) {
           matchesCategory = true;
+        } else if (selCat.includes('mousse')) {
+          matchesCategory = productCat.includes('mousse');
         } else if (selCat.includes('beld')) {
           matchesCategory = productCat.includes('beld');
         } else if (selCat.includes('dry') || selCat.includes('sift') || selCat.includes('90u')) {
@@ -126,6 +130,7 @@ export default function CatalogView({
   const activeTabId = useMemo(() => {
     const sel = (selectedCategory || 'Tous').toLowerCase().trim();
     if (sel === 'tous' || sel === 'all') return 'all';
+    if (sel.includes('mousse')) return 'mousse';
     if (sel.includes('dry') || sel.includes('90u')) return 'drysift';
     if (sel.includes('frozen') || sel.includes('fresh')) return 'frozensift';
     if (sel.includes('wpff') || sel.includes('wppf')) return 'wppf';

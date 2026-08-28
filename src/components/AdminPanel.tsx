@@ -1408,6 +1408,7 @@ export default function AdminPanel({
                       onChange={(e) => setNewCategory(e.target.value)}
                       className="w-full text-xs py-2 px-2 rounded-lg bg-black border border-[#222] focus:border-[#D4AF37] outline-none text-[#D4AF37] font-mono font-bold uppercase"
                     >
+                      <option value="LA MOUSSE">LA MOUSSE</option>
                       <option value="DRY SIFT">DRY SIFT</option>
                       <option value="BELDIA">BELDIA</option>
                       <option value="STATIC">STATIC</option>
@@ -1781,6 +1782,7 @@ export default function AdminPanel({
                         onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
                         className="w-full text-xs p-1.5 bg-black border border-[#222] text-[#D4AF37] font-mono font-bold uppercase"
                       >
+                        <option value="LA MOUSSE">LA MOUSSE</option>
                         <option value="DRY SIFT">DRY SIFT</option>
                         <option value="BELDIA">BELDIA</option>
                         <option value="STATIC">STATIC</option>
@@ -1832,6 +1834,7 @@ export default function AdminPanel({
                     >
                       <option value="">Par défaut (suit la catégorie)</option>
                       <option value="COLLECTIONS PRIVÉES">COLLECTIONS PRIVÉES</option>
+                      <option value="LA MOUSSE">LA MOUSSE</option>
                       <option value="MEET UP RABAT">MEET UP RABAT</option>
                       <option value="WPFF">WPFF</option>
                       <option value="BELDIA">BELDIA</option>
@@ -2686,6 +2689,7 @@ export default function AdminPanel({
                                   className="w-full text-[8px] py-1 px-1.5 rounded bg-zinc-950 border border-zinc-900 text-zinc-300 focus:border-[#D4AF37] outline-none"
                                 >
                                   <option value="All">All (Tout)</option>
+                                  <option value="LA MOUSSE">LA MOUSSE</option>
                                   <option value="DRY SIFT">DRY SIFT</option>
                                   <option value="BELDIA">BELDIA</option>
                                   <option value="FROZEN">FROZEN SIFT</option>

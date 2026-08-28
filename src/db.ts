@@ -380,10 +380,12 @@ export async function getBrandingSettings(): Promise<BrandingSettings> {
     { id: '1', text: 'LA RÉSERVE PRIVÉE', category: 'All', size: 'L', color: '#D4AF37', enabled: true, order: 1 },
     { id: '2', text: 'SELECTION DRY SIFT', category: 'DRY SIFT', size: 'L', color: '#D4AF37', enabled: true, order: 2 },
     { id: '3', text: 'SELECTION BELDIA', category: 'BELDIA', size: 'L', color: '#D4AF37', enabled: true, order: 3 },
-    { id: '4', text: 'SELECTION FROZEN', category: 'FROZEN', size: 'L', color: '#D4AF37', enabled: true, order: 4 },
-    { id: '5', text: 'SELECTION STATIC', category: 'STATIC', size: 'L', color: '#D4AF37', enabled: true, order: 5 },
-    { id: '6', text: 'MEET UP RABAT', category: 'MEET UP RABAT', size: 'L', color: '#D4AF37', enabled: true, order: 6 },
-    { id: '7', text: 'ACCESSOIRES', category: 'ACCESSOIRES', size: 'L', color: '#D4AF37', enabled: true, order: 7 }
+    { id: '4', text: 'SELECTION LA MOUSSE', category: 'LA MOUSSE', size: 'L', color: '#D4AF37', enabled: true, order: 4 },
+    { id: '5', text: 'SELECTION FROZEN', category: 'FROZEN', size: 'L', color: '#D4AF37', enabled: true, order: 5 },
+    { id: '6', text: 'SELECTION STATIC', category: 'STATIC', size: 'L', color: '#D4AF37', enabled: true, order: 6 },
+    { id: '7', text: 'SELECTION WPFF', category: 'WPFF', size: 'L', color: '#D4AF37', enabled: true, order: 7 },
+    { id: '8', text: 'MEET UP RABAT', category: 'MEET UP RABAT', size: 'L', color: '#D4AF37', enabled: true, order: 8 },
+    { id: '9', text: 'ACCESSOIRES', category: 'ACCESSOIRES', size: 'L', color: '#D4AF37', enabled: true, order: 9 }
   ];
 
   try {

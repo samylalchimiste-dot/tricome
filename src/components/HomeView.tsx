@@ -79,10 +79,11 @@ export default function HomeView({
       { id: 'frozensift', label: 'FROZEN SIFT PREMIUM', query: 'Frozen', emoji: '🧊' },
       { id: 'wppf', label: 'WPPF', query: 'WPFF', emoji: '🧈' },
       { id: 'static', label: 'STATIC', query: 'Static', emoji: '🧤' },
-      { id: 'beldia', label: 'BELDIA', query: 'Beldia', emoji: '🇲🇦' }
+      { id: 'beldia', label: 'BELDIA', query: 'Beldia', emoji: '🇲🇦' },
+      { id: 'mousse', label: 'LA MOUSSE', query: 'La Mousse', emoji: '🫧' }
     ];
 
-    const knownIds = new Set(['all', 'drysift', 'frozensift', 'wppf', 'static', 'beldia']);
+    const knownIds = new Set(['all', 'drysift', 'frozensift', 'wppf', 'static', 'beldia', 'mousse']);
 
     (products || []).forEach((p) => {
       if (p.category && p.category.trim()) {
@@ -90,6 +91,7 @@ export default function HomeView({
         const cLower = cTrim.toLowerCase();
         
         const isKnown =
+          cLower.includes('mousse') ||
           cLower.includes('dry') ||
           cLower.includes('sift') ||
           cLower.includes('frozen') ||
@@ -129,6 +131,8 @@ export default function HomeView({
       let matchesCat = false;
       if (sel === 'tous' || sel === 'all' || !sel) {
         matchesCat = true;
+      } else if (sel === 'la mousse' || sel === 'mousse' || sel.includes('mousse')) {
+        matchesCat = cat.includes('mousse');
       } else if (sel === 'dry sift' || sel.includes('dry') || sel.includes('90u')) {
         matchesCat = cat.includes('dry') || cat.includes('sift');
       } else if (sel === 'frozen' || sel.includes('frozen') || sel.includes('fresh')) {
@@ -157,6 +161,7 @@ export default function HomeView({
   const activeTabId = useMemo(() => {
     const sel = (selectedCategory || 'Tous').toLowerCase().trim();
     if (sel === 'tous' || sel === 'all') return 'all';
+    if (sel.includes('mousse')) return 'mousse';
     if (sel.includes('dry') || sel.includes('90u')) return 'drysift';
     if (sel.includes('frozen') || sel.includes('fresh')) return 'frozensift';
     if (sel.includes('wpff') || sel.includes('wppf')) return 'wppf';

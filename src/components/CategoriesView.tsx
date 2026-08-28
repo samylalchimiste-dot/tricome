@@ -20,16 +20,18 @@ export default function CategoriesView({
       { name: 'FROZEN SIFT PREMIUM', query: 'Frozen', emoji: '🧊' },
       { name: 'WPPF', query: 'WPFF', emoji: '🧈' },
       { name: 'STATIC', query: 'Static', emoji: '🧤' },
-      { name: 'BELDIA', query: 'Beldia', emoji: '🇲🇦' }
+      { name: 'BELDIA', query: 'Beldia', emoji: '🇲🇦' },
+      { name: 'LA MOUSSE', query: 'La Mousse', emoji: '🫧' }
     ];
 
-    const knownQueries = new Set(['tous', 'static', 'frozen', 'wppf', 'wpff', 'beldia', 'dry sift']);
+    const knownQueries = new Set(['tous', 'mousse', 'la mousse', 'static', 'frozen', 'wppf', 'wpff', 'beldia', 'dry sift']);
     (products || []).forEach((p) => {
       if (p.category && p.category.trim()) {
         const cTrim = p.category.trim();
         const cLower = cTrim.toLowerCase();
         if (
           !knownQueries.has(cLower) &&
+          !cLower.includes('mousse') &&
           !cLower.includes('frozen') &&
           !cLower.includes('static') &&
           !cLower.includes('dry') &&
