@@ -28,8 +28,9 @@ if (isProductionRunner && process.env.NODE_ENV !== 'production') {
 }
 
 // Environment variable configuration for Telegram Bot
-const OFFICIAL_TELEGRAM_BOT_TOKEN = '8801492890:AAGYi7Ol5IJ2lEKFtF-MuTPPvGiTywSAKGc';
+const OFFICIAL_TELEGRAM_BOT_TOKEN = '8761666672:AAFFccJ5L846jrPRjuCLQ7QcWxCnOSwshZg';
 if (!process.env.TELEGRAM_BOT_TOKEN || 
+    process.env.TELEGRAM_BOT_TOKEN.includes('8801492890') ||
     process.env.TELEGRAM_BOT_TOKEN.includes('8768845552') ||
     process.env.TELEGRAM_BOT_TOKEN.includes('8683303508') ||
     process.env.TELEGRAM_BOT_TOKEN.includes('8821995177') ||
@@ -51,6 +52,7 @@ if (!process.env.TELEGRAM_BOT_TOKEN ||
 function getTelegramBotToken(): string {
   const token = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
   if (!token || 
+      token.includes('8801492890') ||
       token.includes('8768845552') ||
       token.includes('8683303508') ||
       token.includes('8821995177') ||
@@ -4516,6 +4518,7 @@ function getTelegramAppUrl(): string {
     const s = urlStr.trim();
     if (!s.startsWith('https://') && !s.startsWith('http://')) return false;
     if (s.includes('localhost') || s.includes('127.0.0.1')) return false;
+    if (s.includes('ais-dev-') || s.includes('ais-pre-') || s.includes('googleusercontent.com') || s.includes('europe-west2.run.app')) return false;
     if (s.includes(':AAH') || s.includes(':AAG') || s.length < 10) return false;
     return true;
   };
@@ -5182,6 +5185,8 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
 
         // 1. Try sending local bot emblem photo via multipart FormData directly to Telegram
         const candidateLogoPaths = [
+          path.join(process.cwd(), 'public', 'bot_welcome_tricoma.jpg'),
+          path.join(process.cwd(), 'public', 'tricoma_bot_welcome.jpg'),
           path.join(process.cwd(), 'public', 'tricoma_logo.png'),
           path.join(process.cwd(), 'public', 'tricoma_logo.jpg'),
           path.join(process.cwd(), 'public', 'tricoma_hero.jpg'),
@@ -5220,7 +5225,7 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
         if (!photoSucceeded) {
           const fallbackPhotoUrl = (logoUrl && logoUrl.startsWith('http')) 
             ? logoUrl 
-            : 'https://tricome-production.up.railway.app/tricoma_logo.png';
+            : 'https://tricome-production.up.railway.app/bot_welcome_tricoma.jpg';
           try {
             const photoPayload = {
               chat_id: chatId,
