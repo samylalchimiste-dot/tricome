@@ -3,7 +3,15 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Sparkles,
   Heart,
-  ArrowRight
+  ArrowRight,
+  ShoppingBag,
+  Flame,
+  ChevronDown,
+  Play,
+  ShieldCheck,
+  Check,
+  TrendingUp,
+  Search
 } from 'lucide-react';
 import { VideoItem, BrandingSettings } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -32,7 +40,7 @@ interface CategoryTab {
   emoji?: string;
 }
 
-const DEFAULT_HERO_VISUAL = '/tricoma_logo.png';
+const DEFAULT_HERO_VISUAL = '/bot_welcome_tricoma_1787942931044.jpg';
 const FALLBACK_LOGO = '/tricoma_logo.png';
 
 export default function HomeView({
@@ -44,7 +52,10 @@ export default function HomeView({
   favorites = [],
   onToggleFavorite,
   onSelectProduct,
-  triggerHaptic
+  onQuickAddToCart,
+  onNavigateTab,
+  triggerHaptic,
+  showToast
 }: HomeViewProps) {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -60,13 +71,14 @@ export default function HomeView({
     return 'VIP';
   }, [tgUser]);
 
+  const userInitial = (userFirstName || 'Y').charAt(0).toUpperCase();
+
   // Determine Hero image source
   const heroImageUrl = useMemo(() => {
     return (
       branding?.homepageHeroBgUrl ||
       branding?.introBgUrl ||
       branding?.launchScreenUrl ||
-      branding?.logoUrl ||
       DEFAULT_HERO_VISUAL
     );
   }, [branding]);
@@ -76,14 +88,14 @@ export default function HomeView({
     const baseTabs: CategoryTab[] = [
       { id: 'all', label: 'TOUS', query: 'Tous', icon: Sparkles },
       { id: 'drysift', label: 'DRYSIFT 90U', query: 'Dry Sift', emoji: '🍯' },
-      { id: 'frozensift', label: 'FROZEN SIFT PREMIUM', query: 'Frozen', emoji: '🧊' },
-      { id: 'wppf', label: 'WPPF', query: 'WPFF', emoji: '🧈' },
+      { id: 'frozensift', label: 'FROZEN SIFT', query: 'Frozen', emoji: '🧊' },
       { id: 'static', label: 'STATIC', query: 'Static', emoji: '🧤' },
+      { id: 'wppf', label: 'WPFF', query: 'WPFF', emoji: '🧈' },
       { id: 'beldia', label: 'BELDIA', query: 'Beldia', emoji: '🇲🇦' },
       { id: 'mousse', label: 'LA MOUSSE', query: 'La Mousse', emoji: '🫧' }
     ];
 
-    const knownIds = new Set(['all', 'drysift', 'frozensift', 'wppf', 'static', 'beldia', 'mousse']);
+    const knownIds = new Set(['all', 'drysift', 'frozensift', 'static', 'wppf', 'beldia', 'mousse']);
 
     (products || []).forEach((p) => {
       if (p.category && p.category.trim()) {
@@ -170,65 +182,75 @@ export default function HomeView({
     return sel;
   }, [selectedCategory]);
 
+  const scrollToCatalog = () => {
+    triggerHaptic('medium');
+    const el = document.getElementById('catalog-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="space-y-4 pb-28 pt-1 px-3 sm:px-4 max-w-2xl mx-auto" id="home-view">
       
-      {/* 1. COMPACT LUXURY HEADER - CENTERED */}
-      <div className="pt-2.5 pb-3 flex flex-col items-center justify-center text-center border-b border-white/[0.08]">
-        <h1 className="text-lg sm:text-xl font-black tracking-tight text-white uppercase flex items-center justify-center gap-2">
-          <span className="bg-gradient-to-r from-[#f5ecd5] via-[#e5c158] to-[#d4af37] bg-clip-text text-transparent font-extrabold tracking-wide text-center">
-            TRICOMA AL ANASSAR
-          </span>
-        </h1>
-        <p className="text-[10px] sm:text-[11px] font-mono text-zinc-400 uppercase tracking-widest mt-1 text-center">
-          Reserve Collection • Live Menu
-        </p>
-      </div>
-
-      {/* 2. GRANDE IMAGE HERO TRICOMA (CINÉMATIQUE & MOBILE-PERFECT) */}
-      <div className="relative w-full overflow-hidden rounded-2xl sm:rounded-3xl border border-amber-400/25 bg-zinc-950 shadow-[0_10px_35px_rgba(0,0,0,0.7)] group">
-        <div className="relative aspect-[16/8.5] sm:aspect-[21/9] w-full max-h-56 sm:max-h-64 overflow-hidden flex items-center justify-center bg-black">
+      {/* 1. HERO BANNER - PURE PHOTO (PIRATE 69 LUXURY BENCHMARK) */}
+      <div className="relative w-full overflow-hidden rounded-3xl border border-amber-500/30 bg-black shadow-[0_12px_45px_rgba(0,0,0,0.85)]">
+        <div className="relative aspect-[16/10] sm:aspect-[16/8] w-full overflow-hidden flex items-center justify-center bg-black">
           <img
             src={heroImageUrl}
-            alt="TRICOMA AL ANASSAR Visual Hero"
-            className="w-full h-full object-cover object-center filter brightness-[0.92] contrast-[1.08] transition-transform duration-700 ease-out group-hover:scale-105"
+            alt="TRICOMA AL ANASSAR"
+            className="w-full h-full object-cover object-center"
             loading="eager"
             onError={(e) => {
-              // Graceful fallback to logo if hero URL encounters an error
               if ((e.currentTarget as HTMLImageElement).src !== FALLBACK_LOGO) {
                 (e.currentTarget as HTMLImageElement).src = FALLBACK_LOGO;
               }
             }}
           />
-
-          {/* Ambient Subtle Golden Backlight Effect */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent pointer-events-none" />
-          <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl sm:rounded-3xl pointer-events-none" />
         </div>
       </div>
 
-      {/* 3 & 4. SECTION DE BIENVENUE PERSONNALISÉE TELEGRAM */}
-      <div className="py-2 text-center space-y-1">
-        <motion.h2 
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center justify-center gap-2"
+      {/* 2. USER WELCOME CARD (BIENVENUE TELEGRAM) */}
+      <motion.div 
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-zinc-950 via-zinc-900 to-black border border-white/10 shadow-lg flex items-center justify-between gap-3"
+      >
+        <div className="flex items-center gap-3">
+          {/* Avatar initial circle */}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 border border-amber-400 flex items-center justify-center font-mono font-black text-black text-base shadow-[0_0_12px_rgba(245,158,11,0.4)]">
+            {userInitial}
+          </div>
+
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold tracking-wider">
+                BIENVENUE
+              </span>
+            </div>
+            <h3 className="text-sm sm:text-base font-black text-white">
+              {userFirstName}
+            </h3>
+          </div>
+        </div>
+
+        {/* Quick VIP Rank Chip */}
+        <div 
+          onClick={() => onNavigateTab('profile')}
+          className="flex flex-col items-end cursor-pointer group"
         >
-          <span>{t('welcomeTo')}</span>
-          <span className="bg-gradient-to-r from-[#f8f5ee] via-[#e5c158] to-[#d4af37] bg-clip-text text-transparent font-extrabold">
-            {userFirstName}
+          <span className="text-[9px] font-mono text-zinc-400 group-hover:text-amber-300 transition">
+            STATUT MEMBRE
           </span>
-          <span className="text-xl sm:text-2xl animate-bounce-subtle">👋</span>
-        </motion.h2>
+          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[10px] font-mono font-black uppercase">
+            VIP ELITE 💎
+          </span>
+        </div>
+      </motion.div>
 
-        <p className="text-xs sm:text-sm text-zinc-400 font-sans tracking-wide">
-          {branding?.introStatusLine || "TRICOMA AL ANASSAR — RÉSERVE PRIVÉE"}
-        </p>
-      </div>
-
-      {/* 5. NAVIGATION / CATÉGORIES (HORIZONTALES ET SCROLLABLES) */}
-      <div className="relative -mx-3 sm:-mx-4 px-3 sm:px-4 pt-1">
+      {/* 3. CATEGORY TABS (HORIZONTAL SMOOTH SLIDER) */}
+      <div className="relative -mx-3 sm:-mx-4 px-3 sm:px-4 pt-1" id="catalog-section">
         <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth">
           {categoryTabs.map((tab) => {
             const Icon = tab.icon;
@@ -271,7 +293,7 @@ export default function HomeView({
         </div>
       </div>
 
-      {/* 6. CATALOGUE PRODUITS : TITRE SECTION & COMPTEUR */}
+      {/* 4. CATALOGUE TITRE & COMPTEUR */}
       <div className="pt-2 pb-1 flex items-center justify-between px-1">
         <div className="flex items-center gap-3">
           <h2 className="text-sm sm:text-base font-black tracking-wider uppercase bg-gradient-to-r from-[#f8f5ee] via-[#e5c158] to-[#d4af37] bg-clip-text text-transparent drop-shadow-[0_1px_8px_rgba(229,193,88,0.25)]">
@@ -295,11 +317,17 @@ export default function HomeView({
         )}
       </div>
 
-      {/* 6. GRILLE DE PRODUITS LUXE (2 PAR LIGNE) */}
+      {/* 5. GRILLE DE PRODUITS LUXE (2 PAR LIGNE SUR MOBILE) */}
       {filteredProducts.length === 0 ? (
         <div className="py-14 text-center space-y-3 bg-zinc-950/70 rounded-2xl sm:rounded-3xl border border-dashed border-white/10 px-4 backdrop-blur-xl">
-          <p className="text-zinc-400 font-mono text-xs">
-            Aucun produit ne correspond à votre sélection dans cette catégorie.
+          <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+            <Sparkles className="w-6 h-6 animate-pulse" />
+          </div>
+          <p className="text-sm font-black font-sans uppercase tracking-wider text-white">
+            Aucun produit dans cette catégorie
+          </p>
+          <p className="text-xs text-zinc-400 font-mono">
+            Sélectionnez une autre catégorie ou réinitialisez le filtre.
           </p>
           <button
             onClick={() => {
@@ -307,99 +335,133 @@ export default function HomeView({
               setSelectedCategory('Tous');
               setSearchQuery('');
             }}
-            className="px-4 py-2 rounded-xl bg-amber-400/15 text-amber-200 border border-amber-400/40 font-mono text-xs font-bold hover:bg-amber-400/25 transition cursor-pointer"
+            className="mt-2 px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-mono font-bold text-xs uppercase tracking-wider transition"
           >
-            Afficher Tous les Produits
+            Voir tout le catalogue
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:gap-3.5 pt-1">
-          <AnimatePresence mode="popLayout">
-            {filteredProducts.map((p, idx) => {
-              const isFav = favorites.includes(p.id);
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
+          {filteredProducts.map((product) => {
+            const isFav = favorites.includes(product.id);
+            const isOutOfStock =
+              product.status === 'out_of_stock' ||
+              product.stock === 0 ||
+              product.badge === 'OUT_OF_STOCK' ||
+              product.badge === 'OUT';
 
-              return (
-                <motion.div
-                  key={p.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.96, y: 12 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.92, transition: { duration: 0.15 } }}
-                  transition={{ duration: 0.22, delay: Math.min(idx * 0.03, 0.25) }}
-                  whileHover={{ scale: 1.015, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    triggerHaptic('medium');
-                    onSelectProduct(p);
-                  }}
-                  className="group relative bg-gradient-to-b from-zinc-900/95 via-zinc-950/95 to-black border border-white/[0.08] hover:border-amber-400/50 rounded-2xl sm:rounded-[20px] overflow-hidden cursor-pointer transition-all duration-300 shadow-[0_8px_24px_rgba(0,0,0,0.5)] hover:shadow-[0_12px_32px_rgba(229,193,88,0.15)] flex flex-col justify-between backdrop-blur-xl h-full"
-                >
-                  {/* Media Thumbnail Container */}
-                  <div className="relative aspect-[4/3.8] sm:aspect-square w-full bg-zinc-950 overflow-hidden border-b border-white/[0.05]">
-                    <ProductCardMedia product={p} hoverScale={true} />
+            const hasVideo = Boolean(product.videoUrl && product.videoUrl.trim() !== '');
 
-                    {/* Unified Badges */}
-                    <div className="absolute top-2 left-2 z-10">
-                      <span className="h-5 px-2 rounded-md bg-black/85 border border-[#e5c158]/40 text-[#f3e8c8] text-[8px] font-mono uppercase font-black tracking-wider backdrop-blur-md flex items-center shadow-sm">
-                        {p.badge || p.category || 'PREMIUM'}
-                      </span>
+            return (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className="group relative flex flex-col justify-between rounded-2xl sm:rounded-3xl bg-gradient-to-b from-zinc-900/95 via-zinc-950/90 to-black border border-white/10 hover:border-amber-500/40 transition-all duration-300 overflow-hidden shadow-[0_8px_25px_rgba(0,0,0,0.6)] cursor-pointer"
+                onClick={() => {
+                  triggerHaptic('light');
+                  onSelectProduct(product);
+                }}
+              >
+                {/* Media Container with 1:1 square ratio */}
+                <div className="relative aspect-square w-full overflow-hidden bg-black">
+                  <ProductCardMedia
+                    product={product}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+
+                  {/* Top Overlay Badges */}
+                  <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none z-10">
+                    
+                    {/* Category / Stock Badge */}
+                    <div className="flex items-center gap-1">
+                      {isOutOfStock ? (
+                        <span className="px-2 py-0.5 rounded-md bg-red-600/90 backdrop-blur-md text-white font-mono text-[8px] sm:text-[9px] font-black uppercase border border-red-400">
+                          ÉPUISÉ
+                        </span>
+                      ) : product.badge ? (
+                        <span className="px-2 py-0.5 rounded-md bg-amber-500/90 backdrop-blur-md text-black font-mono text-[8px] sm:text-[9px] font-black uppercase border border-amber-300">
+                          {product.badge}
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-amber-300 font-mono text-[8px] sm:text-[9px] font-black uppercase border border-amber-500/30">
+                          {product.category || 'RÉSERVE'}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Top Right Favorite Heart */}
+                    {/* Favorite Toggle Button */}
                     {onToggleFavorite && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           triggerHaptic('light');
-                          onToggleFavorite(p.id);
+                          onToggleFavorite(product.id);
                         }}
-                        className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/75 border border-white/10 text-white hover:text-red-400 active:scale-90 transition cursor-pointer backdrop-blur-md"
+                        className="pointer-events-auto p-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white hover:text-red-400 hover:scale-110 active:scale-90 transition cursor-pointer"
                         title="Favori"
                       >
-                        <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-red-500 text-red-500' : ''}`} />
+                        <Heart className={`w-3.5 h-3.5 ${isFav ? 'text-red-500 fill-red-500' : 'text-white'}`} />
                       </button>
                     )}
                   </div>
 
-                  {/* Product Info & Price Bar */}
-                  <div className="p-3 sm:p-3.5 space-y-2 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1">
-                      <div className="text-[9px] font-mono font-bold uppercase tracking-widest text-[#e5c158]/90 truncate">
-                        {p.category || 'TRICOMA'}
-                      </div>
-
-                      <h4 className="text-xs sm:text-[13px] font-extrabold text-zinc-100 group-hover:text-[#f3e8c8] transition-colors uppercase leading-snug line-clamp-2 min-h-[2rem]">
-                        {p.title}
-                      </h4>
-
-                      {p.description && (
-                        <p className="text-[10px] text-zinc-400 line-clamp-1 font-sans leading-normal">
-                          {p.description}
-                        </p>
-                      )}
+                  {/* Video Indicator */}
+                  {hasVideo && (
+                    <div className="absolute bottom-2 left-2 z-10 pointer-events-none flex items-center gap-1 bg-black/75 backdrop-blur-md px-2 py-0.5 rounded-md border border-amber-500/30 text-[8px] font-mono font-bold text-amber-300 shadow">
+                      <Play className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                      <span>VIDÉO</span>
                     </div>
+                  )}
+                </div>
 
-                    {/* Price & CTA "VOIR →" */}
-                    <div className="pt-2.5 flex items-center justify-between border-t border-white/[0.06] mt-auto">
-                      <div>
-                        <span className="text-xs sm:text-sm font-black font-mono text-[#e5c158] tracking-tight">
-                          {p.price} €
-                        </span>
-                      </div>
-
-                      <div className="px-2 py-1 rounded-lg bg-white/[0.04] group-hover:bg-[#e5c158]/20 border border-white/10 group-hover:border-[#e5c158]/50 text-[#f3e8c8] text-[9px] sm:text-[10px] font-mono font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-1 shadow-sm">
-                        <span>VOIR</span>
-                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                      </div>
-                    </div>
+                {/* Card Content Information */}
+                <div className="p-3 sm:p-4 flex flex-col justify-between flex-1 space-y-2">
+                  <div className="space-y-1">
+                    <h3 className="font-sans font-black text-xs sm:text-sm text-white line-clamp-1 group-hover:text-amber-300 transition">
+                      {product.title}
+                    </h3>
+                    <p className="text-[10px] sm:text-xs text-zinc-400 line-clamp-1 font-sans">
+                      {product.description || 'Extraction artisanale exclusive.'}
+                    </p>
                   </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+
+                  {/* Price & Quick Add Button */}
+                  <div className="pt-1 flex items-center justify-between border-t border-white/[0.08]">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-mono text-zinc-400 uppercase">
+                        À partir de
+                      </span>
+                      <span className="text-xs sm:text-sm font-mono font-black text-amber-300">
+                        {product.price} {product.currency || '€'}
+                      </span>
+                    </div>
+
+                    {/* Quick Add To Cart Button */}
+                    {onQuickAddToCart && !isOutOfStock && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          triggerHaptic('medium');
+                          onQuickAddToCart(product);
+                          if (showToast) {
+                            showToast(`"${product.title}" ajouté au panier !`, 'success');
+                          }
+                        }}
+                        className="p-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-black transition shadow-[0_0_10px_rgba(245,158,11,0.3)] cursor-pointer"
+                        title="Ajouter au panier"
+                      >
+                        <ShoppingBag className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
-
     </div>
   );
 }

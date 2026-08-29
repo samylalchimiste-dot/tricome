@@ -14,7 +14,9 @@ import {
   Sparkles,
   Award,
   ShieldCheck,
-  Check
+  Zap,
+  Check,
+  Flame
 } from 'lucide-react';
 import { VideoItem, getPriceForSize, getSizeOptionsForCategory } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -27,7 +29,6 @@ interface ProductDetailModalProps {
   triggerHaptic: (style: 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error', customMessage?: string) => void;
 }
 
-// Default standard colors
 const DEFAULT_COLORS = [
   { name: 'Noir Profond', hex: '#000000', imageUrl: '' },
   { name: 'Or Pur', hex: '#D4AF37', imageUrl: '' },
@@ -43,7 +44,6 @@ export default function ProductDetailModal({
 }: ProductDetailModalProps) {
   const { t } = useLanguage();
 
-  // Dynamically configure gram weights depending on product category
   const sizeOptions = useMemo(() => {
     return getSizeOptionsForCategory(product.category);
   }, [product.category]);
@@ -58,12 +58,10 @@ export default function ProductDetailModal({
            product.badge === 'OUT OF STOCK';
   }, [product]);
 
-  // Auto-reset selectedSize when product changes so there is NO initial pre-selection
   useEffect(() => {
     setSelectedSize(null);
   }, [product.id]);
 
-  // Pricing calculation based on selectedSize
   const computedPrice = useMemo(() => {
     if (!selectedSize) {
       return product.price;
@@ -71,7 +69,6 @@ export default function ProductDetailModal({
     return getPriceForSize(product.price, selectedSize, product.category);
   }, [product.price, selectedSize, product.category]);
   
-  // Clean default single color to satisfy types
   const selectedColor = useMemo(() => {
     const list = product.colors && product.colors.length > 0 ? product.colors : DEFAULT_COLORS;
     return list[0] || { name: 'Gold', hex: '#D4AF37', imageUrl: '' };
@@ -83,26 +80,21 @@ export default function ProductDetailModal({
     product.videoUrl && product.videoUrl.trim() !== '' ? 'video' : 'photo'
   );
 
-  // Reset image error state when navigating slides or active tab or product change
   useEffect(() => {
     setImageError(false);
   }, [activeSlide, product.id, mediaActiveTab]);
 
-  // Compile full list of images
   const slides = useMemo(() => {
     const list: string[] = [];
     
-    // 1. Core thumbnail
     if (product.thumbnailUrl && product.thumbnailUrl.trim() !== '' && !product.thumbnailUrl.includes('/input_file')) {
       list.push(product.thumbnailUrl);
     }
     
-    // 2. Selected color swatch image
     if (selectedColor && selectedColor.imageUrl && selectedColor.imageUrl.trim() !== '' && !list.includes(selectedColor.imageUrl)) {
       list.push(selectedColor.imageUrl);
     }
 
-    // 3. User sub-uploaded images
     if (product.additionalPhotos && product.additionalPhotos.length > 0) {
       product.additionalPhotos.forEach(urlStr => {
         if (urlStr && urlStr.trim() !== '' && !list.includes(urlStr)) {
@@ -129,7 +121,7 @@ export default function ProductDetailModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/75 backdrop-blur-md overflow-hidden p-0 md:p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/85 backdrop-blur-md overflow-hidden p-0 md:p-4 animate-fade-in"
       onClick={onClose}
     >
       <motion.div
@@ -137,33 +129,33 @@ export default function ProductDetailModal({
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-        className="w-full h-[92vh] md:h-auto md:max-h-[92vh] max-w-2xl bg-gradient-to-br from-[#0a0a0a] to-black text-white md:rounded-3xl overflow-hidden flex flex-col md:grid md:grid-cols-2 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.5)] border border-white/10"
+        className="w-full h-[92vh] md:h-auto md:max-h-[92vh] max-w-2xl bg-gradient-to-b from-zinc-950 via-zinc-900 to-black text-white rounded-t-3xl md:rounded-3xl overflow-hidden flex flex-col md:grid md:grid-cols-2 shadow-[0_24px_50px_rgba(0,0,0,0.9)] border border-amber-500/30"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* CLOSE BUTTON FOR MOBILE - Top right */}
+        {/* CLOSE BUTTON - Top right */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-50 p-2.5 rounded-full bg-black/80 backdrop-blur-md border border-neutral-800 text-orange-400 hover:bg-orange-500 hover:text-black transition duration-300 shadow-md cursor-pointer"
+          className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-zinc-300 hover:bg-amber-500 hover:text-black transition duration-300 shadow-lg cursor-pointer"
         >
           <X className="w-4 h-4" />
         </button>
 
-        {/* LEFT COLUMN: VISUAL GALLERY AND IMAGE SLIDESHOW */}
-        <div className="relative aspect-[4/5] md:aspect-auto md:h-full bg-gradient-to-b from-[#0a0a0a]/50 to-black/40 overflow-hidden flex flex-col justify-between">
+        {/* LEFT COLUMN: VISUAL GALLERY AND MEDIA */}
+        <div className="relative aspect-[4/4.5] md:aspect-auto md:h-full bg-black overflow-hidden flex flex-col justify-between">
           
-          {/* Photos vs Video Tab selection panel */}
+          {/* Media tab selector */}
           {product.videoUrl && product.videoUrl.trim() !== '' && (
-            <div className="absolute top-[4.5rem] left-4 z-30 flex gap-2">
+            <div className="absolute top-4 left-4 z-30 flex gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   triggerHaptic('light');
                   setMediaActiveTab('photo');
                 }}
-                className={`px-3 py-1.5 rounded-full text-[9px] font-mono font-extrabold tracking-widest uppercase border transition duration-300 shadow-md cursor-pointer ${
+                className={`px-3 py-1 rounded-full text-[9px] font-mono font-black tracking-wider uppercase border transition duration-300 cursor-pointer ${
                   mediaActiveTab === 'photo'
-                    ? 'bg-white text-black border-white'
-                    : 'bg-black/80 text-gray-400 border-white/5 hover:text-white hover:border-white/15'
+                    ? 'bg-amber-400 text-black border-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
+                    : 'bg-black/80 text-zinc-400 border-white/10 hover:text-white'
                 }`}
               >
                 📷 Photos ({slides.length})
@@ -174,23 +166,23 @@ export default function ProductDetailModal({
                   triggerHaptic('light');
                   setMediaActiveTab('video');
                 }}
-                className={`px-3 py-1.5 rounded-full text-[9px] font-mono font-extrabold tracking-widest uppercase border transition duration-300 shadow-md cursor-pointer ${
+                className={`px-3 py-1 rounded-full text-[9px] font-mono font-black tracking-wider uppercase border transition duration-300 cursor-pointer ${
                   mediaActiveTab === 'video'
-                    ? 'bg-orange-400 text-black border-orange-400 font-black animate-pulse'
-                    : 'bg-black/80 text-gray-400 border-white/5 hover:text-white hover:border-orange-400/55'
+                    ? 'bg-amber-400 text-black border-amber-300 font-black shadow-[0_0_10px_rgba(245,158,11,0.5)] animate-pulse'
+                    : 'bg-black/80 text-zinc-400 border-white/10 hover:text-white'
                 }`}
               >
-                🎬 Vidéo
+                🎬 Vidéo HD
               </button>
             </div>
           )}
 
-          {/* Media box */}
-          <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-gradient-to-b from-[#0a0a0a]/30 to-black/20">
+          {/* Media display */}
+          <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-black">
             {mediaActiveTab === 'video' && product.videoUrl && product.videoUrl.trim() !== '' ? (
               <video
                 src={product.videoUrl}
-                className="w-full h-full object-contain bg-transparent"
+                className="w-full h-full object-contain bg-black"
                 controls
                 autoPlay
                 muted
@@ -204,11 +196,11 @@ export default function ProductDetailModal({
                   key={activeSlide}
                   src={slides[activeSlide] || undefined}
                   alt={`${product.title} view`}
-                  initial={{ opacity: 0, scale: 1.03 }}
+                  initial={{ opacity: 0, scale: 1.02 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.97 }}
-                  transition={{ duration: 0.35, ease: 'easeOut' }}
-                  className="w-full h-full object-contain bg-transparent"
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.25 }}
+                  className="w-full h-full object-contain bg-black"
                   loading="eager"
                   onError={() => {
                     setImageError(true);
@@ -216,26 +208,18 @@ export default function ProductDetailModal({
                 />
               </AnimatePresence>
             ) : (
-              <div className="w-full h-full bg-gradient-to-b from-neutral-950 to-[#040404] flex flex-col justify-center items-center text-center p-6 relative font-mono select-none">
-                <div className="absolute inset-4 border border-dashed border-orange-900/10 rounded-2xl pointer-events-none" />
-                <div className="w-14 h-14 rounded-full border border-orange-900/30 flex items-center justify-center bg-black/85 text-orange-400 text-base font-black tracking-widest mb-4 shadow-2xl relative overflow-hidden">
-                  <span className="relative z-10">N/A</span>
+              <div className="w-full h-full bg-zinc-950 flex flex-col justify-center items-center text-center p-6 select-none font-mono">
+                <div className="w-12 h-12 rounded-full border border-amber-500/30 flex items-center justify-center bg-black text-amber-400 text-sm font-black mb-2 shadow-lg">
+                  TA
                 </div>
-                <span className="text-[10px] uppercase font-black tracking-[0.25em] text-orange-400 mb-1">
+                <span className="text-[10px] uppercase font-black tracking-widest text-amber-300">
                   TRICOMA AL ANASSAR
                 </span>
-                <span className="text-[8px] uppercase font-bold text-neutral-400 tracking-[0.12em] block">
-                  Média indisponible
+                <span className="text-[8px] uppercase text-zinc-400 mt-0.5">
+                  RÉSERVE PRIVÉE
                 </span>
               </div>
             )}
-          </div>
-
-          {/* Premium tag overlay */}
-          <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5 pointer-events-none">
-            <span className="bg-black/90 backdrop-blur-md border border-orange-500/50 text-orange-400 text-[8px] font-mono font-extrabold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-md">
-              TRICOMA AL ANASSAR — RÉSERVE PRIVÉE
-            </span>
           </div>
 
           {/* Nav arrows */}
@@ -243,132 +227,101 @@ export default function ProductDetailModal({
             <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 flex justify-between items-center pointer-events-none z-10">
               <button
                 onClick={handlePrevSlide}
-                className="w-9 h-9 rounded-full bg-black/95 backdrop-blur-sm shadow border border-neutral-800 text-orange-400 pointer-events-auto flex items-center justify-center hover:bg-orange-500 hover:text-black duration-300"
+                className="w-8 h-8 rounded-full bg-black/85 shadow border border-white/20 text-white pointer-events-auto flex items-center justify-center hover:bg-amber-400 hover:text-black transition"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 onClick={handleNextSlide}
-                className="w-9 h-9 rounded-full bg-black/95 backdrop-blur-sm shadow border border-neutral-800 text-orange-400 pointer-events-auto flex items-center justify-center hover:bg-orange-500 hover:text-black duration-300"
+                className="w-8 h-8 rounded-full bg-black/85 shadow border border-white/20 text-white pointer-events-auto flex items-center justify-center hover:bg-amber-400 hover:text-black transition"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
 
-          {/* Bottom slides count dots */}
+          {/* Slide Dots */}
           {slides.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-black/85 backdrop-blur-md shadow-md border border-neutral-900 px-2.5 py-1 rounded-full flex gap-1.5 items-center">
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 bg-black/80 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-full flex gap-1.5 items-center">
               {slides.map((_, i) => (
                 <span 
                   key={i} 
-                  className={`w-1.5 h-1.5 rounded-full duration-300 ${i === activeSlide ? 'bg-orange-400 w-3' : 'bg-neutral-800'}`} 
+                  className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === activeSlide ? 'bg-amber-400 w-3' : 'bg-zinc-700'}`} 
                 />
               ))}
             </div>
           )}
         </div>
 
-        {/* RIGHT COLUMN: BRAND DETAILS, SELECTIONS AND PRICING */}
-        <div className="p-6 md:p-8 flex flex-col justify-between overflow-y-auto h-full scrollbar-none bg-gradient-to-b from-[#080808] to-black">
-          <div className="space-y-6">
+        {/* RIGHT COLUMN: DETAILS & ACTIONS */}
+        <div className="p-5 md:p-6 flex flex-col justify-between overflow-y-auto h-full scrollbar-none bg-gradient-to-b from-zinc-950 via-zinc-900 to-black">
+          <div className="space-y-4">
             
-            {/* Category / Collection Tag */}
-            <div className="flex items-center justify-between gap-1.5 flex-wrap">
+            {/* Header category badge */}
+            <div className="flex items-center justify-between gap-1.5">
               <div className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-orange-400" />
-                <span className="text-[10px] font-mono text-orange-400 tracking-[0.2em] uppercase font-bold">
-                  {product.category} • TRICOMA AL ANASSAR
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[10px] font-mono text-amber-300 tracking-wider uppercase font-bold">
+                  {product.category} • SÉLECTION PRIVÉE
                 </span>
               </div>
               {isOutOfStock && (
-                <div className="bg-red-950/40 border border-red-500/35 text-red-500 font-mono font-bold text-[8.5px] px-2.5 py-1 rounded-full uppercase tracking-wider animate-pulse flex items-center gap-1.5 font-extrabold shadow-[0_0_8px_rgba(239,68,68,0.15)]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]" />
-                  {t('outOfStock')}
-                </div>
+                <span className="px-2 py-0.5 rounded-md bg-red-600/90 text-white font-mono text-[9px] font-black uppercase">
+                  RUPTURE DE STOCK
+                </span>
               )}
             </div>
 
-            {/* Product Title inside dialog */}
+            {/* Product Title */}
             <div>
-              <h1 className="font-mono text-2xl md:text-3xl font-medium text-[#FCFAF6] uppercase tracking-wide">
+              <h1 className="font-sans text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
                 {product.title}
               </h1>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex text-amber-500 text-xs shrink-0 tracking-tighter">
-                  {"★".repeat(Math.round(product.rating || 5))}
-                  {"☆".repeat(5 - Math.round(product.rating || 5))}
-                </div>
-                <span className="text-[10px] text-neutral-400 font-light font-mono font-bold">
-                  {product.rating || "4.9"} ({product.reviewCount || 42})
-                </span>
-              </div>
-              <div className="flex flex-col gap-1 mt-2.5">
-                <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-wider block">
-                  {!(product.category || '').toLowerCase().includes('accessoire') ? `${t('priceFrom')} :` : `${t('priceFrom')} :`} {(product.category || '').toLowerCase().includes('accessoire') ? `${product.price} €` : `${product.price} €/g`}
+
+              {/* Price display */}
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className="text-xs font-mono text-zinc-400 uppercase">
+                  PRIX :
                 </span>
                 <AnimatePresence mode="wait">
                   {!selectedSize ? (
-                    <motion.div 
-                      key="no-selection"
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 4 }}
-                      className="flex items-baseline gap-2.5 mt-0.5"
+                    <motion.span 
+                      key="base"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-xl font-mono font-black text-amber-300"
                     >
-                      <span className="font-mono text-2xl font-black text-neutral-300 bg-black/60 px-3 py-1 rounded border border-white/5 shadow-md">
-                        {(product.category || '').toLowerCase().includes('accessoire') ? `${product.price} €` : `${product.price} €/g`}
-                      </span>
-                      <span className="text-[10px] font-mono text-neutral-500 tracking-wider">
-                        {t('chooseSize')}
-                      </span>
-                    </motion.div>
+                      {(product.category || '').toLowerCase().includes('accessoire') ? `${product.price} €` : `${product.price} € / 100G`}
+                    </motion.span>
                   ) : (
-                    <motion.div 
-                      key="with-selection"
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 4 }}
-                      className="flex items-baseline gap-2.5 mt-0.5"
+                    <motion.span 
+                      key="computed"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-2xl font-mono font-black text-amber-300 bg-amber-500/15 border border-amber-400/40 px-2.5 py-0.5 rounded-lg"
                     >
-                      <span className="font-mono text-2xl font-black text-black bg-orange-400 px-3 py-1 rounded border border-orange-400 shadow-lg">
-                        {computedPrice} €
-                      </span>
-                      <span className="text-[10px] font-mono text-orange-400 font-bold tracking-wider uppercase">
-                        {t('totalPrice')} (<b className="text-white bg-black px-1.5 py-0.5 rounded border border-white/5 font-extrabold font-mono">{selectedSize}</b>)
-                      </span>
-                    </motion.div>
+                      {computedPrice} € <span className="text-xs text-zinc-300 font-medium">({selectedSize})</span>
+                    </motion.span>
                   )}
                 </AnimatePresence>
               </div>
             </div>
 
-            {/* Micro details pills */}
-            <div className="flex flex-wrap gap-2 pt-1">
-              <span className="text-[9px] font-mono tracking-wider uppercase border border-white/5 text-orange-400 bg-black/60 px-2.5 py-1 rounded">
-                Origine Certifiée
+            {/* Description */}
+            <div className="p-3 rounded-xl bg-zinc-900/80 border border-white/5 space-y-1">
+              <span className="text-[9px] font-mono uppercase text-zinc-400 tracking-wider block">
+                CARACTÉRISTIQUES & PROFIL
               </span>
-              <span className="text-[9px] font-mono tracking-wider uppercase border border-white/5 text-neutral-300 bg-black/60 px-2.5 py-1 rounded">
-                Produit Premium
-              </span>
-              <span className="text-[9px] font-mono tracking-wider uppercase border border-white/5 text-neutral-300 bg-black/60 px-2.5 py-1 rounded">
-                Livraison Discrète
-              </span>
+              <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                {product.description || 'Extraction de premier choix, arômes intenses et pureté irréprochable.'}
+              </p>
             </div>
 
-            {/* Description */}
-            <p className="text-xs pt-1 text-neutral-300 leading-relaxed font-mono font-light">
-              {product.description}
-            </p>
-
-            <hr className="border-neutral-900" />
-
-            {/* WEIGHT SELECTION SECTION */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-[10px] uppercase font-mono font-bold text-neutral-500 tracking-wider">
-                <span>{(product.category || '').toLowerCase().includes('accessoire') ? t('formatLabel') : `${t('quantityLabel')} / ${t('formatLabel')} :`}</span>
-                <span className="text-gray-400 font-normal">Original Pack</span>
-              </div>
+            {/* Size / Weight Selector */}
+            <div className="space-y-2">
+              <span className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider block">
+                CHOISISSEZ LE FORMAT / GRAMMAGE :
+              </span>
 
               <div className="grid grid-cols-3 gap-2">
                 {sizeOptions.map((sz) => {
@@ -382,12 +335,12 @@ export default function ProductDetailModal({
                         triggerHaptic('medium');
                         setSelectedSize(sz);
                       }}
-                      className={`flex-1 py-2 text-xs font-mono font-medium rounded-lg border tracking-wide transition-all duration-300 ${
+                      className={`py-2 px-1 text-xs font-mono font-black rounded-xl border tracking-wide transition-all duration-300 cursor-pointer ${
                         isOutOfStock
-                          ? 'bg-black/10 border-white/5 text-neutral-600 cursor-not-allowed opacity-55'
+                          ? 'bg-zinc-900 border-white/5 text-zinc-600 cursor-not-allowed opacity-50'
                           : isSelected 
-                            ? 'bg-orange-400 border-orange-400 text-black font-extrabold shadow-md cursor-pointer' 
-                            : 'bg-black/60 border-white/5 text-neutral-300 hover:border-orange-500/50 hover:text-orange-400 cursor-pointer'
+                            ? 'bg-amber-400 border-amber-300 text-black shadow-[0_0_12px_rgba(245,158,11,0.5)]' 
+                            : 'bg-zinc-900/90 border-white/10 text-zinc-300 hover:border-amber-400/50 hover:text-amber-300'
                       }`}
                     >
                       {sz}
@@ -397,36 +350,34 @@ export default function ProductDetailModal({
               </div>
             </div>
 
-            {/* Trust icons */}
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="p-3 rounded-xl bg-black/50 border border-white/5 flex gap-2 items-center backdrop-blur-md">
-                <Award className="w-4 h-4 text-orange-400" />
-                <span className="text-[9px] font-mono text-neutral-300 uppercase tracking-wider font-medium leading-none">
-                  Excellence Validée
+            {/* Guarantees */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <div className="p-2.5 rounded-xl bg-zinc-900/60 border border-white/5 flex items-center gap-2">
+                <Award className="w-4 h-4 text-amber-400 shrink-0" />
+                <span className="text-[9px] font-mono text-zinc-300 uppercase leading-tight font-medium">
+                  Qualité Certifiée
                 </span>
               </div>
-              <div className="p-3 rounded-xl bg-black/50 border border-white/5 flex gap-2 items-center backdrop-blur-md">
-                <ShieldCheck className="w-4 h-4 text-orange-400" />
-                <span className="text-[9px] font-mono text-neutral-300 uppercase tracking-wider font-medium leading-none">
-                  Service Client 24/7
+              <div className="p-2.5 rounded-xl bg-zinc-900/60 border border-white/5 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="text-[9px] font-mono text-zinc-300 uppercase leading-tight font-medium">
+                  Envoi Discret 24/48H
                 </span>
               </div>
             </div>
 
           </div>
 
-          {/* CTA BAR */}
-          <div className="space-y-2.5 mt-8 md:mt-12">
+          {/* ACTION BUTTONS */}
+          <div className="space-y-2.5 pt-6">
             {isOutOfStock ? (
-              <>
-                <button
-                  disabled
-                  className="w-full py-4 rounded-xl border border-neutral-800 bg-black/45 text-neutral-500 cursor-not-allowed flex items-center justify-center gap-2 font-semibold text-xs tracking-[0.2em] uppercase transition-all duration-300 opacity-80"
-                >
-                  <ShoppingBag className="w-4 h-4 text-neutral-600" />
-                  <span>{t('outOfStock')}</span>
-                </button>
-              </>
+              <button
+                disabled
+                className="w-full py-3.5 rounded-2xl bg-zinc-900 border border-white/10 text-zinc-500 cursor-not-allowed flex items-center justify-center gap-2 font-mono text-xs uppercase font-bold"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>PRODUIT ÉPUISÉ</span>
+              </button>
             ) : (
               <>
                 <button
@@ -438,14 +389,14 @@ export default function ProductDetailModal({
                     triggerHaptic('success');
                     onAddToCart(product, selectedSize, selectedColor);
                   }}
-                  className={`w-full py-4 rounded-xl border font-semibold text-xs tracking-[0.2em] uppercase duration-300 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99] ${
+                  className={`w-full py-3.5 rounded-2xl font-mono text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                     selectedSize 
-                      ? 'border-orange-500/50 bg-black/60 text-orange-400 hover:bg-orange-500/10 shadow-md' 
-                      : 'border-white/5 bg-black/30 text-neutral-500 opacity-60'
+                      ? 'border border-amber-400/50 bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
+                      : 'border border-white/10 bg-zinc-900/50 text-zinc-500'
                   }`}
                 >
                   <ShoppingBag className="w-4 h-4" />
-                  <span>{selectedSize ? t('addToCart') : t('chooseSize')}</span>
+                  <span>{selectedSize ? `AJOUTER AU PANIER • ${computedPrice}€` : 'SÉLECTIONNEZ UN FORMAT'}</span>
                 </button>
 
                 <button
@@ -457,21 +408,17 @@ export default function ProductDetailModal({
                     triggerHaptic('heavy');
                     onInstantBuy(product, selectedSize, selectedColor);
                   }}
-                  className={`w-full py-4 rounded-xl font-extrabold text-xs tracking-[0.2em] uppercase duration-300 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.99] shadow-lg ${
+                  className={`w-full py-3.5 rounded-2xl font-mono text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg ${
                     selectedSize 
-                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-black hover:opacity-90' 
-                      : 'bg-black/40 text-neutral-600 cursor-not-allowed border border-white/5'
+                      ? 'bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-black hover:opacity-90 shadow-[0_0_20px_rgba(245,158,11,0.4)]' 
+                      : 'bg-zinc-900 text-zinc-600 cursor-not-allowed border border-white/5'
                   }`}
                 >
-                  <CreditCard className="w-4 h-4" />
-                  <span>{selectedSize ? t('checkoutBtn') : t('chooseSize')}</span>
+                  <Zap className="w-4 h-4 fill-black" />
+                  <span>ACHAT EXPRESS ⚡</span>
                 </button>
               </>
             )}
-
-            <p className="text-[8px] text-center text-neutral-500 tracking-wider font-mono uppercase">
-              🔒 Livraison rapide et discrète
-            </p>
           </div>
 
         </div>
@@ -479,4 +426,3 @@ export default function ProductDetailModal({
     </motion.div>
   );
 }
-

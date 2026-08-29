@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, Truck, Lock, CreditCard, ChevronDown, Sparkles, HelpCircle, FileText, Award } from 'lucide-react';
+import { ShieldCheck, Truck, Lock, CreditCard, ChevronDown, Sparkles, HelpCircle, FileText, Award, PackageCheck, Send } from 'lucide-react';
 
 interface InfoViewProps {
   triggerHaptic: (style: 'light' | 'medium' | 'heavy') => void;
@@ -17,120 +17,92 @@ export default function InfoView({ triggerHaptic, onNavigateTab }: InfoViewProps
 
   const faqs = [
     {
-      q: 'Comment passer une commande ?',
-      a: 'Parcourez notre catalogue, ajoutez vos sélections préférées dans le panier, choisissez votre grammage puis validez. La commande est immédiatement transmise de façon sécurisée.'
+      q: 'Comment passer commande sur l\'application ?',
+      a: 'Parcourez le menu de la réserve, sélectionnez vos produits avec le grammage souhaité (100G, 500G, 1KG) et ajoutez-les à votre panier. Vous pouvez ensuite choisir votre mode de livraison (Domicile, Point Relais ou Locker 24/7).'
     },
     {
-      q: 'Comment s\'effectue l\'expédition et l\'emballage ?',
-      a: 'Toutes nos commandes sont conditionnées sous double étanchéité thermo-scellée sous vide, garantissant 0 odeur. L\'expédition est discrète avec numéro de suivi anonyme.'
+      q: 'Comment est garantie la discrétion de l\'emballage ?',
+      a: 'Toutes les expéditions bénéficient d\'un double scellage sous vide thermique étanche 100% anti-odeur, inséré dans un colis neutre cartonné sans aucune mention extérieure.'
     },
     {
-      q: 'Quels sont les délais de livraison ?',
-      a: 'La livraison prend généralement entre 24h et 48h en envoi express. Vous recevez un code de suivi en temps réel sur Telegram dès l\'expédition.'
+      q: 'Quels sont les délais et modes d\'expédition ?',
+      a: 'Les commandes sont traitées et remises au transporteur sous 24h. Le délai moyen est de 24h à 48h selon votre localisation (France, Europe, etc.). Un numéro de suivi vous est transmis.'
     },
     {
       q: 'Quels sont les moyens de paiement acceptés ?',
-      a: 'Nous acceptons la Crypto (USDT, BTC, ETH), les cartes bancaires via notre passerelle chiffrée, ainsi que les cartes cadeaux / coupons prépayés.'
+      a: 'Nous acceptons exclusivement les règlements sécurisés par Cryptomonnaies (USDT, BTC) ainsi que par Carte Bancaire et Virement instantané. Aucun paiement à la livraison n\'est accepté afin de respecter strictement les protocoles de discrétion, d\'anonymat et de sécurité 0-Log.'
     },
     {
-      q: 'Mes données personnelles sont-elles conservées ?',
-      a: 'Non. Nous appliquons une politique stricte 0-Log. Aucune donnée d\'adresse ou d\'identité n\'est conservée sur nos serveurs une fois la livraison confirmée.'
-    },
-    {
-      q: 'Puis-je suivre ma commande en direct ?',
-      a: 'Oui ! Rendez-vous dans la section "Profil" pour consulter l\'historique de vos commandes et leur statut en temps réel.'
+      q: 'Quelle est la politique de conservation des données (0-Log) ?',
+      a: 'Nous appliquons une politique stricte 0-Log. Aucune coordonnée personnelle ni adresse postale n\'est conservée sur des serveurs permanents une fois la commande honorée.'
     }
   ];
 
   return (
-    <div className="space-y-6 pb-24 pt-2 px-4 max-w-2xl mx-auto" id="info-view">
-      {/* Header Banner */}
-      <div className="relative rounded-3xl overflow-hidden border border-orange-500/30 bg-gradient-to-b from-neutral-900 via-black to-black p-6 text-center space-y-3 shadow-[0_0_30px_rgba(255,107,0,0.1)]">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 text-[9px] font-mono uppercase tracking-widest font-extrabold">
-          <Award className="w-3.5 h-3.5 text-orange-500" />
-          <span>RÉSERVE PRIVÉE • CHARTE DE QUALITÉ</span>
+    <div className="space-y-4 pb-28 pt-1 px-3 sm:px-4 max-w-2xl mx-auto" id="info-view">
+      
+      {/* 1. HEADER BANNER */}
+      <div className="relative rounded-3xl overflow-hidden border border-amber-500/30 bg-gradient-to-b from-zinc-900 via-zinc-950 to-black p-5 sm:p-6 text-center space-y-2 shadow-[0_10px_35px_rgba(0,0,0,0.85)]">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-mono uppercase tracking-widest font-bold">
+          <Award className="w-3.5 h-3.5 text-amber-400" />
+          <span>CHARTE QUALITÉ & ENGAGEMENT</span>
         </div>
 
-        <h1 className="text-2xl font-black font-sans tracking-tight text-white uppercase">
-          INFORMATIONS & <span className="text-orange-500">ENGAGEMENT</span>
+        <h1 className="text-xl sm:text-2xl font-black font-sans tracking-tight text-white uppercase">
+          INFORMATIONS & <span className="text-amber-400">EXPÉDITION</span>
         </h1>
 
-        <p className="text-xs text-neutral-400 font-mono max-w-md mx-auto leading-relaxed">
-          Découvrez notre philosophie, nos méthodes d'expédition ultra-discrètes, la FAQ et nos garanties de confidentialité.
+        <p className="text-xs text-zinc-400 font-mono max-w-md mx-auto leading-relaxed">
+          Découvrez notre protocole d'expédition discrète 24/48h, notre charte de sélection et les réponses aux questions fréquentes.
         </p>
       </div>
 
-      {/* 1. BRAND PRESENTATION */}
-      <div className="p-5 rounded-2xl bg-gradient-to-b from-neutral-900 to-black border border-white/10 space-y-3 shadow-lg">
-        <div className="flex items-center gap-2 text-orange-400 font-mono text-xs font-extrabold uppercase">
-          <Sparkles className="w-4 h-4 text-orange-500" />
-          <span>À Propos de TRICOMA AL ANASSAR</span>
+      {/* 2. THREE PILLARS OF EXCELLENCE */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <div className="p-4 rounded-2xl bg-zinc-950 border border-white/10 space-y-2 shadow-md">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
+            <Truck className="w-4 h-4" />
+          </div>
+          <h3 className="text-xs font-bold uppercase text-white font-mono">
+            Expédition 24/48H
+          </h3>
+          <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
+            Colis expédiés avec numéro de suivi en temps réel et emballage neutre.
+          </p>
         </div>
-        <p className="text-xs text-neutral-300 leading-relaxed font-sans">
-          TRICOMA AL ANASSAR est une réserve privée sélective dédiée aux passionnés d'extractions d'exception et de fleurs d'artisanat.
-          Nous travaillons en direct avec des maîtres producteurs certifiés pour garantir une pureté totale, un profil terpénique exceptionnel et une conservation optimale.
-        </p>
-        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5 text-center">
-          <div className="p-2 rounded-xl bg-black/40 border border-white/5">
-            <span className="text-xs font-black font-mono text-orange-400 block">100%</span>
-            <span className="text-[8px] text-neutral-400 font-mono uppercase">Certifié</span>
+
+        <div className="p-4 rounded-2xl bg-zinc-950 border border-white/10 space-y-2 shadow-md">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+            <ShieldCheck className="w-4 h-4" />
           </div>
-          <div className="p-2 rounded-xl bg-black/40 border border-white/5">
-            <span className="text-xs font-black font-mono text-emerald-400 block">0-LOG</span>
-            <span className="text-[8px] text-neutral-400 font-mono uppercase">Confidentialité</span>
+          <h3 className="text-xs font-bold uppercase text-white font-mono">
+            Double Sous-Vide
+          </h3>
+          <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
+            Scellage thermique hermétique garantissant 100% d'étanchéité sans odeur.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-zinc-950 border border-white/10 space-y-2 shadow-md">
+          <div className="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400">
+            <Lock className="w-4 h-4" />
           </div>
-          <div className="p-2 rounded-xl bg-black/40 border border-white/5">
-            <span className="text-xs font-black font-mono text-amber-400 block">24/48H</span>
-            <span className="text-[8px] text-neutral-400 font-mono uppercase">Livraison</span>
-          </div>
+          <h3 className="text-xs font-bold uppercase text-white font-mono">
+            Protocole 0-Log
+          </h3>
+          <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
+            Suppression automatique de vos coordonnées dès validation de la livraison.
+          </p>
         </div>
       </div>
 
-      {/* 2. SHIPPING & PACKAGING */}
-      <div className="p-5 rounded-2xl bg-gradient-to-b from-neutral-900 to-black border border-white/10 space-y-3 shadow-lg">
-        <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-extrabold uppercase">
-          <Truck className="w-4 h-4 text-emerald-500" />
-          <span>Expédition & Emballage Hermétique</span>
-        </div>
-        <div className="space-y-2 text-xs text-neutral-300 font-sans">
-          <div className="flex items-start gap-2.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-            <p><strong>Double mise sous vide :</strong> Vos produits sont scellés sous atmosphère protectrice avec barrière anti-odeur absolue.</p>
-          </div>
-          <div className="flex items-start gap-2.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-            <p><strong>Colis Neutre :</strong> Aucun marquage ni logo extérieur. Discrétion à 100% lors du dépôt et de la réception.</p>
-          </div>
-          <div className="flex items-start gap-2.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-            <p><strong>Suivi en temps réel :</strong> Réception de votre numéro de suivi directement via notre bot Telegram dès la prise en charge.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. PAYMENT METHODS */}
-      <div className="p-5 rounded-2xl bg-gradient-to-b from-neutral-900 to-black border border-white/10 space-y-3 shadow-lg">
-        <div className="flex items-center gap-2 text-sky-400 font-mono text-xs font-extrabold uppercase">
-          <CreditCard className="w-4 h-4 text-sky-500" />
-          <span>Moyens de Paiement Sécurisés</span>
-        </div>
-        <div className="grid grid-cols-2 gap-2.5 text-xs text-neutral-300">
-          <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-1">
-            <span className="font-mono font-bold text-white block">Cryptomonnaies ₿</span>
-            <span className="text-[10px] text-neutral-400 block">USDT (TRC20), Bitcoin, Ethereum, Monero. Sans frais supplémentaires.</span>
-          </div>
-          <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-1">
-            <span className="font-mono font-bold text-white block">Carte & Coupons 💳</span>
-            <span className="text-[10px] text-neutral-400 block">Passerelle sécurisée et cartes prépayées (Paysafecard, PCS, Neosurf).</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. FAQ ACCORDION */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-orange-400 font-mono text-xs font-extrabold uppercase">
-          <HelpCircle className="w-4 h-4 text-orange-500" />
-          <span>Foire Aux Questions (FAQ)</span>
+      {/* 3. FAQ ACCORDION */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-950 border border-white/10 space-y-3 shadow-lg">
+        <div className="flex items-center gap-2 border-b border-white/10 pb-3">
+          <HelpCircle className="w-4 h-4 text-amber-400" />
+          <h2 className="font-mono text-xs font-black uppercase tracking-wider text-white">
+            FOIRE AUX QUESTIONS (FAQ)
+          </h2>
         </div>
 
         <div className="space-y-2">
@@ -139,16 +111,14 @@ export default function InfoView({ triggerHaptic, onNavigateTab }: InfoViewProps
             return (
               <div
                 key={idx}
-                className="rounded-2xl border border-white/10 bg-neutral-900/80 overflow-hidden transition"
+                className="rounded-2xl border border-white/5 bg-zinc-900/80 overflow-hidden transition"
               >
                 <button
                   onClick={() => toggleFaq(idx)}
-                  className="w-full p-4 text-left flex items-center justify-between gap-3 cursor-pointer hover:bg-neutral-800/50 transition"
+                  className="w-full p-3.5 text-left flex items-center justify-between gap-3 font-sans font-bold text-xs sm:text-sm text-white hover:text-amber-300 transition cursor-pointer"
                 >
-                  <span className="text-xs font-bold text-white uppercase font-sans">
-                    {faq.q}
-                  </span>
-                  <ChevronDown className={`w-4 h-4 text-orange-400 shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                  <span>{faq.q}</span>
+                  <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform duration-300 shrink-0 ${isOpen ? 'rotate-180 text-amber-400' : ''}`} />
                 </button>
 
                 <AnimatePresence>
@@ -158,9 +128,9 @@ export default function InfoView({ triggerHaptic, onNavigateTab }: InfoViewProps
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="px-4 pb-4 text-xs text-neutral-300 leading-relaxed font-sans border-t border-white/5 pt-3 bg-black/40"
+                      className="px-3.5 pb-3.5 pt-0 text-xs text-zinc-300 font-sans leading-relaxed border-t border-white/5"
                     >
-                      {faq.a}
+                      <div className="pt-2">{faq.a}</div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -170,19 +140,6 @@ export default function InfoView({ triggerHaptic, onNavigateTab }: InfoViewProps
         </div>
       </div>
 
-      {/* Quick Action Button */}
-      <div className="text-center pt-2">
-        <button
-          onClick={() => {
-            triggerHaptic('medium');
-            onNavigateTab('contact');
-          }}
-          className="px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg shadow-orange-500/20 hover:scale-105 active:scale-95 transition cursor-pointer inline-flex items-center gap-2"
-        >
-          <FileText className="w-4 h-4" />
-          <span>Une Question ? Contactez le Support</span>
-        </button>
-      </div>
     </div>
   );
 }

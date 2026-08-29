@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, MessageSquarePlus, CheckCircle2, ShieldAlert, X, Send, Award } from 'lucide-react';
+import { Star, MessageSquarePlus, CheckCircle2, ShieldAlert, X, Send, Award, Sparkles } from 'lucide-react';
 import { ReviewItem, Order } from '../types';
 import { submitReview } from '../db';
 
@@ -30,19 +30,12 @@ export default function ReviewsView({
   const [category, setCategory] = useState<string>('Frozen Sift');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Calculate Average Rating & Distribution
+  // Calculate Average Rating
   const totalCount = reviews.length;
   const avgRating = totalCount > 0
     ? (reviews.reduce((acc, r) => acc + (r.rating || 5), 0) / totalCount).toFixed(1)
     : '5.0';
 
-  const distribution = [5, 4, 3, 2, 1].map((stars) => {
-    const count = reviews.filter((r) => Math.round(r.rating || 5) === stars).length;
-    const percentage = totalCount > 0 ? Math.round((count / totalCount) * 100) : stars === 5 ? 100 : 0;
-    return { stars, count, percentage };
-  });
-
-  // Verify if user has completed order
   const completedOrders = userOrders.filter((o) => o.status === 'completed');
   const isEligibleToReview = completedOrders.length > 0;
 
@@ -58,302 +51,253 @@ export default function ReviewsView({
 
   const handleSubmitReview = async () => {
     if (!comment.trim()) {
-      showToast('Veuillez saisir votre commentaire.');
+      showToast('Veuillez rédiger un commentaire');
       return;
     }
 
     setIsSubmitting(true);
-    try {
-      const res = await submitReview({
-        telegramId: String(tgUser?.id || ''),
-        telegramUsername: 'Anonyme',
-        authorName: 'Anonyme',
-        rating,
-        comment,
-        category
-      });
+    triggerHaptic('heavy');
 
-      if (res.success) {
-        triggerHaptic('success');
-        showToast('Avis publié avec succès ! Merci pour votre retour.');
-        setComment('');
-        setShowAddModal(false);
-        onRefreshReviews();
-      } else {
-        triggerHaptic('error');
-        showToast(res.error || 'Erreur lors de la publication');
-      }
-    } catch (e: any) {
-      showToast('Erreur serveur lors de l\'envoi');
+    const authorName = [tgUser?.first_name, tgUser?.last_name].filter(Boolean).join(' ') || tgUser?.username || 'Client Vérifié';
+
+    const newRev: ReviewItem = {
+      id: `rev-${Date.now()}`,
+      telegramId: tgUser?.id ? String(tgUser.id) : 'unknown',
+      telegramUsername: tgUser?.username || '',
+      authorName,
+      rating,
+      comment: comment.trim(),
+      date: new Date().toISOString().split('T')[0],
+      verifiedPurchase: true,
+      productCategory: category,
+      vipLevel: 'VIP Elite'
+    };
+
+    try {
+      await submitReview(newRev);
+      triggerHaptic('success');
+      showToast('Votre avis a été publié avec succès !');
+      setShowAddModal(false);
+      setComment('');
+      onRefreshReviews();
+    } catch {
+      showToast('Erreur lors de la publication');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6 pb-24 pt-2 px-4 max-w-2xl mx-auto" id="reviews-view">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-            <span>Avis & Retours Clients</span>
-            <span className="px-2.5 py-0.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 font-mono text-[10px] font-extrabold">
-              100% Vérifiés
-            </span>
-          </h2>
-          <p className="text-xs text-neutral-400 font-mono">
-            Témoignages authentiques de membres du cercle privé
-          </p>
+    <div className="space-y-4 pb-28 pt-1 px-3 sm:px-4 max-w-2xl mx-auto" id="reviews-view">
+      
+      {/* 1. HEADER BANNER */}
+      <div className="relative rounded-3xl overflow-hidden border border-amber-500/30 bg-gradient-to-b from-zinc-900 via-zinc-950 to-black p-5 sm:p-6 text-center space-y-2 shadow-[0_10px_35px_rgba(0,0,0,0.85)]">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-mono uppercase tracking-widest font-bold">
+          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+          <span>EXPÉRIENCES & RETOURS CLIENTS</span>
         </div>
 
-        <button
-          onClick={handleOpenAddReview}
-          className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-500 text-black font-extrabold text-xs tracking-wider uppercase shadow-lg shadow-orange-600/30 hover:scale-105 active:scale-95 transition cursor-pointer flex items-center gap-1.5"
-        >
-          <MessageSquarePlus className="w-4 h-4" />
-          <span>Laisser un avis</span>
-        </button>
-      </div>
+        <h1 className="text-xl sm:text-2xl font-black font-sans tracking-tight text-white uppercase">
+          AVIS CLIENTS <span className="text-amber-400">VÉRIFIÉS</span>
+        </h1>
 
-      {/* RATING OVERVIEW CARD */}
-      <div className="p-5 rounded-3xl bg-neutral-900/80 border border-orange-500/30 backdrop-blur-md shadow-xl grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-        {/* Left Column: Big Score */}
-        <div className="text-center space-y-1 md:border-r md:border-white/10 md:pr-4">
-          <div className="text-4xl font-black font-mono text-white flex items-center justify-center gap-1">
-            <span>{avgRating}</span>
-            <span className="text-orange-500 text-2xl">/5</span>
+        {/* Global Rating Score */}
+        <div className="pt-2 flex items-center justify-center gap-3 font-mono">
+          <div className="text-3xl font-black text-amber-300">
+            {avgRating}
           </div>
-          <div className="flex items-center justify-center gap-1 text-amber-400">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="w-4 h-4 fill-amber-400" />
-            ))}
-          </div>
-          <p className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest pt-1">
-            Basé sur {totalCount} avis certifiés
-          </p>
-        </div>
-
-        {/* Right Column: Breakdown Bars */}
-        <div className="md:col-span-2 space-y-1.5">
-          {distribution.map((d) => (
-            <div key={d.stars} className="flex items-center gap-2 text-xs font-mono">
-              <span className="w-8 text-neutral-400 font-bold">{d.stars} ★</span>
-              <div className="flex-1 h-2 rounded-full bg-neutral-800 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-orange-600 to-amber-400 rounded-full transition-all duration-500"
-                  style={{ width: `${d.percentage}%` }}
-                />
-              </div>
-              <span className="w-10 text-right text-neutral-400 text-[10px]">
-                {d.percentage}%
-              </span>
+          <div className="text-left">
+            <div className="flex text-amber-400 text-sm">
+              {'★★★★★'}
             </div>
-          ))}
+            <span className="text-[10px] text-zinc-400 uppercase">
+              Basé sur {totalCount} retours réels
+            </span>
+          </div>
+        </div>
+
+        <div className="pt-3">
+          <button
+            onClick={handleOpenAddReview}
+            className="px-5 py-2.5 rounded-full bg-amber-500 hover:bg-amber-400 text-black font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer inline-flex items-center gap-2 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+          >
+            <MessageSquarePlus className="w-4 h-4" />
+            <span>Déposer un avis vérifié</span>
+          </button>
         </div>
       </div>
 
-      {/* REVIEWS LIST */}
+      {/* 2. REVIEWS LIST */}
       <div className="space-y-3">
-        <h3 className="text-xs font-mono font-extrabold tracking-widest text-orange-400 uppercase">
-          Dernières Publications
-        </h3>
-
-        <div className="space-y-3">
-          {reviews.map((rev) => (
-            <div
-              key={rev.id}
-              className="p-4 rounded-2xl bg-neutral-900/60 border border-white/10 space-y-2.5 shadow-md hover:border-orange-500/30 transition"
-            >
-              <div className="flex items-start justify-between">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-extrabold text-white">
-                      Anonyme
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-orange-500/10 border border-orange-500/30 text-orange-400 text-[8px] font-mono uppercase font-black">
-                      {rev.vipLevel || 'Member'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[9px] font-mono text-neutral-500">
-                      {rev.date ? new Date(rev.date).toLocaleDateString('fr-FR') : 'Récemment'}
-                    </span>
+        {reviews.map((rev) => (
+          <motion.div
+            key={rev.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-2xl bg-zinc-950 border border-white/10 space-y-2.5 shadow-md"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-400/40 flex items-center justify-center font-mono font-bold text-amber-300 text-xs">
+                  {rev.authorName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-sans font-bold text-xs text-white">
+                      {rev.authorName}
+                    </h4>
                     {rev.verifiedPurchase && (
-                      <span className="text-[9px] font-mono text-emerald-400 flex items-center gap-1 font-bold">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                        Achat Vérifié
+                      <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[8px] font-mono font-bold uppercase">
+                        Vérifié
                       </span>
                     )}
                   </div>
+                  <span className="text-[9px] font-mono text-zinc-500">
+                    {rev.date}
+                  </span>
                 </div>
+              </div>
 
-                <div className="flex items-center gap-0.5 text-amber-400 bg-black/40 px-2 py-1 rounded-xl border border-white/5">
-                  {Array.from({ length: rev.rating || 5 }).map((_, i) => (
-                    <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+              <div className="flex text-amber-400 text-xs">
+                {"★".repeat(Math.min(5, Math.max(1, rev.rating || 5)))}
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-300 font-sans leading-relaxed">
+              "{rev.comment}"
+            </p>
+
+            {rev.productCategory && (
+              <div className="text-[9px] font-mono text-amber-300/80 uppercase">
+                🏷️ Produit : {rev.productCategory}
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      {/* MODAL: ADD REVIEW */}
+      <AnimatePresence>
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAddModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-md p-6 rounded-3xl bg-zinc-950 border border-amber-500/40 shadow-2xl z-10 space-y-4 text-white font-mono"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <h3 className="text-sm font-black uppercase text-amber-300">
+                  Déposer un avis
+                </h3>
+                <button onClick={() => setShowAddModal(false)} className="text-zinc-400 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Star rating selector */}
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-400 uppercase">Note :</span>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      className={`text-2xl ${rating >= star ? 'text-amber-400' : 'text-zinc-700'}`}
+                    >
+                      ★
+                    </button>
                   ))}
                 </div>
               </div>
 
-              <p className="text-xs text-neutral-200 font-sans leading-relaxed">
-                "{rev.comment}"
-              </p>
-
-              {rev.productCategory && (
-                <div className="pt-1 flex items-center gap-2 text-[9px] font-mono text-neutral-500">
-                  <span>Variété : <strong className="text-orange-400">{rev.productCategory}</strong></span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* NOT ELIGIBLE MODAL */}
-      <AnimatePresence>
-        {showNotEligibleModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
-              className="bg-neutral-900 border border-orange-500/40 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl relative"
-            >
-              <button
-                onClick={() => setShowNotEligibleModal(false)}
-                className="absolute top-4 right-4 text-neutral-400 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="w-14 h-14 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400 flex items-center justify-center mx-auto">
-                <ShieldAlert className="w-8 h-8" />
+              {/* Category */}
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-400 uppercase">Catégorie testée :</span>
+                <input
+                  type="text"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-black border border-white/15 text-xs text-white focus:outline-none focus:border-amber-400"
+                  placeholder="Ex: Frozen Sift, Drysift 90u..."
+                />
               </div>
 
-              <div className="space-y-1.5">
-                <h3 className="text-base font-extrabold text-white">
-                  Commande Requise
+              {/* Comment text */}
+              <div className="space-y-1">
+                <span className="text-[10px] text-zinc-400 uppercase">Votre avis :</span>
+                <textarea
+                  rows={3}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  className="w-full p-3 rounded-xl bg-black border border-white/15 text-xs text-white focus:outline-none focus:border-amber-400 resize-none"
+                  placeholder="Partagez vos impressions sur la texture, les terpènes, la livraison..."
+                />
+              </div>
+
+              <button
+                onClick={handleSubmitReview}
+                disabled={isSubmitting}
+                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase transition cursor-pointer"
+              >
+                {isSubmitting ? 'Publication...' : 'Publier mon avis'}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL: NOT ELIGIBLE */}
+      <AnimatePresence>
+        {showNotEligibleModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowNotEligibleModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative w-full max-w-sm p-6 rounded-3xl bg-zinc-950 border border-red-500/30 shadow-2xl z-10 space-y-4 text-center text-white"
+            >
+              <div className="w-12 h-12 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center mx-auto text-red-400">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="font-mono text-sm font-black uppercase text-white">
+                  Avis réservé aux clients
                 </h3>
-                <p className="text-xs text-neutral-300 font-sans leading-relaxed">
-                  Afin de garantir l'authenticité absolue des retours, seuls les utilisateurs ayant au moins une commande terminée et livrée peuvent publier un avis.
+                <p className="text-xs text-zinc-400 font-sans leading-relaxed">
+                  Pour garantir l'authenticité de nos avis, seuls les membres ayant au moins une commande validée et livrée peuvent déposer un témoignage.
                 </p>
               </div>
 
               <button
                 onClick={() => setShowNotEligibleModal(false)}
-                className="w-full py-3 rounded-2xl bg-orange-500 text-black font-extrabold text-xs uppercase tracking-wider shadow-lg hover:bg-orange-400 transition"
+                className="w-full py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-mono text-xs uppercase font-bold transition"
               >
                 Compris
               </button>
             </motion.div>
-          </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
-      {/* ADD REVIEW MODAL */}
-      <AnimatePresence>
-        {showAddModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.95 }}
-              className="bg-neutral-900 border border-orange-500/40 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl relative"
-            >
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                  <Star className="w-4 h-4 text-orange-500 fill-orange-500" />
-                  <span>Publier un Avis Certifié</span>
-                </h3>
-                <button
-                  onClick={() => setShowAddModal(false)}
-                  className="text-neutral-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                {/* Rating selection */}
-                <div className="space-y-1">
-                  <label className="text-xs font-mono text-neutral-400 block">Note globale</label>
-                  <div className="flex items-center gap-2">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setRating(s)}
-                        className={`p-2 rounded-xl border transition ${
-                          s <= rating
-                            ? 'bg-orange-500/20 border-orange-500 text-amber-400'
-                            : 'bg-neutral-800 border-white/5 text-neutral-600'
-                        }`}
-                      >
-                        <Star className={`w-5 h-5 ${s <= rating ? 'fill-amber-400' : ''}`} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Category Selection */}
-                <div className="space-y-1">
-                  <label className="text-xs font-mono text-neutral-400 block">Gamme concernée</label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-neutral-800 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-orange-500"
-                  >
-                    <option value="Frozen Sift">Frozen Sift</option>
-                    <option value="Static Sift">Static Sift</option>
-                    <option value="WPFF">WPFF</option>
-                    <option value="Accessoires">Accessoires</option>
-                  </select>
-                </div>
-
-                {/* Comment area */}
-                <div className="space-y-1">
-                  <label className="text-xs font-mono text-neutral-400 block">Votre expérience / commentaire</label>
-                  <textarea
-                    rows={4}
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    placeholder="Partagez votre avis sur la qualité, les arômes, la livraison..."
-                    className="w-full bg-neutral-800 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-neutral-500 font-mono focus:outline-none focus:border-orange-500 resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl bg-neutral-800 text-neutral-300 text-xs font-mono"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={handleSubmitReview}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-500 text-black font-extrabold text-xs uppercase flex items-center gap-2 shadow-lg hover:scale-105 transition disabled:opacity-50"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{isSubmitting ? 'Publication...' : 'Publier l\'Avis'}</span>
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

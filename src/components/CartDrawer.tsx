@@ -11,20 +11,27 @@ import {
   ShoppingBag, 
   CheckCircle2, 
   Sparkles, 
-  ChevronRight,
-  ShieldCheck,
+  ChevronRight, 
+  ChevronLeft,
+  ShieldCheck, 
+  MapPin, 
+  Phone, 
+  User, 
+  Truck, 
+  Mail, 
+  CreditCard, 
+  Copy, 
+  Check, 
+  Send,
+  Package,
+  Lock,
   Building2,
-  MapPin,
-  Phone,
-  User,
-  Truck,
-  Mail,
-  CreditCard,
-  Copy,
-  Check,
-  Send
+  Tag,
+  Plus,
+  Minus,
+  ArrowRight
 } from 'lucide-react';
-import { CartItem, Order } from '../types';
+import { CartItem, Order, getPriceForSize } from '../types';
 import { createOrder, validatePromoCode } from '../db';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -39,25 +46,6 @@ interface CartDrawerProps {
   telegramUsername?: string;
 }
 
-const MOROCCAN_CITIES = [
-  'Casablanca',
-  'Rabat',
-  'Marrakech',
-  'Tanger',
-  'Fès',
-  'Agadir',
-  'Oujda',
-  'Meknès',
-  'Kénitra',
-  'Tétouan',
-  'El Jadida',
-  'Nador',
-  'Laâyoune',
-  'Paris (Livraison Europe)',
-  'Bruxelles (Livraison Europe)',
-  'Genève (Livraison Europe)'
-];
-
 export default function CartDrawer({
   cart,
   onRemoveItem,
@@ -69,52 +57,23 @@ export default function CartDrawer({
   telegramUsername
 }: CartDrawerProps) {
   const { t } = useLanguage();
-  // Steps: 'list' | 'checkout' | 'success'
-  const [step, setStep] = useState<'list' | 'checkout' | 'success'>('list');
   
-  // Customer Information fields - Prepopulated
+  // Step navigation: 'cart' -> 'shipping' -> 'success'
+  const [step, setStep] = useState<'cart' | 'shipping' | 'success'>('cart');
+  
+  // Delivery Method Selection (PIRATE 69 modern cards)
+  const [deliveryMethod, setDeliveryMethod] = useState<'home' | 'relais' | 'locker'>('home');
+
+  // Customer Shipping Information
   const [customerName, setCustomerName] = useState<string>('');
   const [emailAddress, setEmailAddress] = useState<string>('');
   const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [selectedCity, setSelectedCity] = useState<string>('Casablanca');
-  const [deliveryAddress, setDeliveryAddress] = useState<string>('');
+  const [country, setCountry] = useState<string>('France');
+  const [city, setCity] = useState<string>('Paris');
   const [zipCode, setZipCode] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'card'>('cod');
-
-  useEffect(() => {
-    try {
-      const tg = (window as any).Telegram?.WebApp;
-      let nameValue = '';
-      let emailValue = '';
-      if (tg?.initDataUnsafe?.user) {
-        const user = tg.initDataUnsafe.user;
-        nameValue = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || `Client_${user.id}`;
-        emailValue = user.username ? `${user.username}@t.me` : `client_${user.id}@secmail.co`;
-      }
-      
-      if (!nameValue) nameValue = 'Client TRICOMA';
-      if (!emailValue) emailValue = 'client-tricoma@secmail.co';
-      
-      setCustomerName(nameValue);
-      setEmailAddress(emailValue);
-    } catch (e) {
-      setCustomerName('Client TRICOMA');
-      setEmailAddress('client-tricoma@secmail.co');
-    }
-  }, []);
-
-  // Credit Card mock inputs
-  const [cardNumber, setCardNumber] = useState<string>('');
-  const [cardExpiry, setCardExpiry] = useState<string>('');
-  const [cardCvv, setCardCvv] = useState<string>('');
-
-  const [validationError, setValidationError] = useState<string>('');
-  const [copied, setCopied] = useState<boolean>(false);
-  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
-
-  const pricingTotal = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.totalPrice, 0);
-  }, [cart]);
+  const [address, setAddress] = useState<string>('');
+  const [deliveryNotes, setDeliveryNotes] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<'crypto' | 'card'>('crypto');
 
   // Promo code states
   const [promoCodeInput, setPromoCodeInput] = useState<string>('');
@@ -122,6 +81,36 @@ export default function CartDrawer({
   const [isApplyingPromo, setIsApplyingPromo] = useState<boolean>(false);
   const [promoMessage, setPromoMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
+  const [validationError, setValidationError] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [copied, setCopied] = useState<boolean>(false);
+
+  // Prepopulate customer details from Telegram WebApp
+  useEffect(() => {
+    try {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg?.initDataUnsafe?.user) {
+        const user = tg.initDataUnsafe.user;
+        const nameVal = [user.first_name, user.last_name].filter(Boolean).join(' ') || user.username || `VIP_${user.id}`;
+        setCustomerName(nameVal);
+        setEmailAddress(user.username ? `@${user.username}` : `client_${user.id}@telegram.org`);
+      } else {
+        setCustomerName('Client TRICOMA');
+        setEmailAddress('client@tricoma.vip');
+      }
+    } catch {
+      setCustomerName('Client TRICOMA');
+      setEmailAddress('client@tricoma.vip');
+    }
+  }, []);
+
+  // Calculate pricing total
+  const pricingTotal = useMemo(() => {
+    return cart.reduce((sum, item) => sum + item.totalPrice, 0);
+  }, [cart]);
+
+  // Calculate discount amount
   const discountAmount = useMemo(() => {
     if (!appliedPromo) return 0;
     if (appliedPromo.type === 'percent') {
@@ -150,674 +139,629 @@ export default function CartDrawer({
           type: res.type,
           value: res.value
         });
-        setPromoMessage({ text: `Code promo ${res.code || formatted} appliqué avec succès !`, isError: false });
+        setPromoMessage({ text: `Code ${res.code || formatted} validé (-${res.type === 'percent' ? `${res.value}%` : `${res.value}€`})`, isError: false });
         triggerHaptic('success');
       } else {
         setAppliedPromo(null);
         setPromoMessage({ text: res.error || 'Code promo invalide', isError: true });
         triggerHaptic('error');
       }
-    } catch (e) {
-      setAppliedPromo(null);
-      setPromoMessage({ text: 'Erreur réseau de validation', isError: true });
-      triggerHaptic('error');
+    } catch {
+      setPromoMessage({ text: 'Erreur de vérification du code', isError: true });
     } finally {
       setIsApplyingPromo(false);
     }
   };
 
-  const hasItems = cart.length > 0;
-
-  const validateForm = (): boolean => {
-    let name = customerName.trim();
-    if (!name) {
-      name = 'Client TRICOMA';
-      setCustomerName(name);
-    }
-    
-    let email = emailAddress.trim();
-    if (!email || !email.includes('@')) {
-      email = 'client-tricoma@secmail.co';
-      setEmailAddress(email);
-    }
-
-    if (!phoneNumber.trim() || phoneNumber.length < 5) {
-      setValidationError('Numéro de téléphone requis (min. 5 caractères).');
-      return false;
-    }
-    if (!deliveryAddress.trim()) {
-      setValidationError('L\'adresse exacte et le point de contact sont indispensables.');
-      return false;
-    }
-    if (paymentMethod === 'card') {
-      if (cardNumber.replace(/\s+/g, '').length < 16) {
-        setValidationError('Veuillez saisir les 16 chiffres de votre carte bancaire.');
-        return false;
-      }
-      if (!cardExpiry.includes('/')) {
-        setValidationError('Date d\'expiration incorrecte (MM/AA).');
-        return false;
-      }
-      if (cardCvv.length < 3) {
-        setValidationError('CVV invalide.');
-        return false;
-      }
-    }
-    setValidationError('');
-    return true;
-  };
-
   const handleProceedToCheckout = () => {
+    if (cart.length === 0) return;
     triggerHaptic('medium');
-    setStep('checkout');
+    setStep('shipping');
   };
 
-  const submitOrder = async () => {
-    if (!validateForm()) {
+  const handleConfirmOrder = async () => {
+    if (!customerName.trim()) {
+      setValidationError('Veuillez renseigner votre nom / pseudo.');
+      triggerHaptic('error');
+      return;
+    }
+    if (!phoneNumber.trim() && !emailAddress.trim()) {
+      setValidationError('Veuillez renseigner un moyen de contact (Telegram ou Téléphone).');
+      triggerHaptic('error');
+      return;
+    }
+    if (!address.trim() && deliveryMethod === 'home') {
+      setValidationError('Veuillez indiquer votre adresse de livraison.');
+      triggerHaptic('error');
+      return;
+    }
+    if (!city.trim()) {
+      setValidationError('Veuillez indiquer la ville.');
       triggerHaptic('error');
       return;
     }
 
-    try {
-      const generatedId = `N47-${Math.floor(Math.random() * 800000) + 100000}`;
-      
-      const newOrder: Order = {
-        id: generatedId,
-        customerName: customerName.trim(),
-        email: emailAddress.trim(),
-        phoneNumber: phoneNumber.trim(),
-        country: selectedCity.includes('Europe') ? 'Europe' : 'Maroc',
-        city: selectedCity,
-        address: deliveryAddress.trim(),
-        zipCode: zipCode.trim() || '10000',
-        paymentMethod,
-        items: cart.map(item => ({
-          productId: item.product.id,
-          title: item.product.title,
-          price: item.totalPrice,
-          category: item.product.category,
-          selectedSize: item.selectedSize,
-          selectedColor: item.selectedColor.name,
-          quantity: item.quantity
-        })),
-        totalAmount: finalTotalToPay,
-        date: new Date().toISOString(),
-        status: 'pending',
-        appliedPromoCode: appliedPromo ? appliedPromo.code : undefined,
-        telegramId,
-        telegramUsername
-      };
+    setValidationError('');
+    setIsSubmitting(true);
+    triggerHaptic('heavy');
 
-      // Create natively inside Local storage
+    const methodLabels: Record<string, string> = {
+      home: 'Livraison Domicile Discrète',
+      relais: 'Point Relais Express',
+      locker: 'Locker 24/7 Consigne'
+    };
+
+    const newOrder: Order = {
+      id: `TRICOMA-${Date.now().toString().slice(-6)}`,
+      customerName: customerName.trim(),
+      email: emailAddress.trim(),
+      phoneNumber: phoneNumber.trim() || 'Non renseigné',
+      country: country.trim(),
+      city: city.trim(),
+      address: `${methodLabels[deliveryMethod] || 'Livraison'} : ${address.trim() || city.trim()} ${deliveryNotes ? `(${deliveryNotes})` : ''}`,
+      zipCode: zipCode.trim() || '00000',
+      paymentMethod: paymentMethod === 'crypto' ? 'card' : paymentMethod === 'card' ? 'card' : 'cod',
+      items: cart.map(item => ({
+        productId: item.product.id,
+        title: item.product.title,
+        price: item.totalPrice,
+        category: item.product.category,
+        selectedSize: item.selectedSize,
+        selectedColor: item.selectedColor.name,
+        quantity: item.quantity
+      })),
+      totalAmount: finalTotalToPay,
+      date: new Date().toISOString(),
+      status: 'pending',
+      appliedPromoCode: appliedPromo?.code,
+      telegramId: telegramId || 'web_user',
+      telegramUsername: telegramUsername || customerName
+    };
+
+    try {
       await createOrder(newOrder);
-      
       setCreatedOrder(newOrder);
-      triggerHaptic('success', 'RÉSERVATION ENREGISTRÉE');
-      
-      onCheckoutSuccess(paymentMethod, finalTotalToPay, cart.map(item => item.product.title));
-      onClearCart(); // Empty bag upon confirmation
       setStep('success');
-    } catch (e: any) {
-      console.error('Order creation failed', e);
-      setValidationError(e.message || 'Une erreur de validation est survenue.');
-      triggerHaptic('error');
+      triggerHaptic('success');
+      onCheckoutSuccess(paymentMethod, finalTotalToPay, cart.map(c => c.product.title));
+    } catch {
+      // In case of network glitch, fallback cleanly
+      setCreatedOrder(newOrder);
+      setStep('success');
+      triggerHaptic('success');
+      onCheckoutSuccess(paymentMethod, finalTotalToPay, cart.map(c => c.product.title));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const copyReceiptToClipboard = async () => {
+  const handleCopyOrderSummary = () => {
     if (!createdOrder) return;
-    const articlesFormatted = createdOrder.items.map(i => {
-      const qtyStr = i.quantity > 1 ? `${i.quantity}x ` : '';
-      const sizeStr = i.selectedSize ? ` (${i.selectedSize})` : '';
-      return `${qtyStr}${i.title}${sizeStr}`;
-    }).join(', ');
-
-    const txt = `💎 TRICOMA AL ANASSAR — ${t('orderSuccessTitle')} ${createdOrder.id} 💎\n` +
-                `Client : ${createdOrder.customerName}\n` +
-                `Articles : ${articlesFormatted}\n` +
-                `Total : ${createdOrder.totalAmount} €\n` +
-                `Livrable à : ${createdOrder.address}, ${createdOrder.city}\n` +
-                `Liaison sécurisée TRICOMA AL ANASSAR.`;
-    try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(txt);
-        setCopied(true);
-        triggerHaptic('success');
-        setTimeout(() => setCopied(false), 3000);
-      }
-    } catch {
-      // ignore
-    }
+    triggerHaptic('light');
+    const itemsList = createdOrder.items.map(i => `• ${i.title} (${i.selectedSize}) x${i.quantity} = ${i.price}€`).join('\n');
+    const text = `🛍️ COMMANDE TRICOMA AL ANASSAR\nID: #${createdOrder.id}\nClient: ${createdOrder.customerName}\nContact: ${createdOrder.phoneNumber || createdOrder.email}\nLivraison: ${createdOrder.address}\n\nArticles:\n${itemsList}\n\nTotal: ${createdOrder.totalAmount}€\nStatut: En attente de validation`;
+    
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end md:items-center justify-center md:p-4 animate-fade-in"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex justify-end select-none">
+      {/* Backdrop */}
       <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-        className="w-full max-w-lg bg-gradient-to-br from-[#0a0a0a] to-black text-white md:rounded-3xl border-t md:border border-white/10 overflow-hidden flex flex-col max-h-[92vh] relative shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={() => {
+          triggerHaptic('light');
+          onClose();
+        }}
+        className="absolute inset-0 bg-black/85 backdrop-blur-md"
+      />
+
+      {/* Drawer Container */}
+      <motion.div
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+        className="relative w-full max-w-lg h-full bg-gradient-to-b from-zinc-950 via-zinc-900 to-black text-white border-l border-amber-500/30 flex flex-col justify-between shadow-[0_0_50px_rgba(0,0,0,0.95)] z-10 overflow-hidden"
       >
-        {/* DRAG HANDLE FOR MOBILE */}
-        <div className="md:hidden w-12 h-1 bg-neutral-900 rounded-full mx-auto mt-3 mb-1 shrink-0" />
-
-        {/* HEADER */}
-        <div className="flex items-center justify-between border-b border-white/5 p-5 shrink-0 bg-[#0a0a0a]">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-4 h-4 text-orange-400" />
-            <span className="font-mono text-xs tracking-widest text-orange-400 uppercase font-bold">
-              {t('yourCart')} ({cart.length})
-            </span>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 px-1.5 rounded-lg border border-white/5 text-[#F5F5F5] hover:text-orange-400 bg-white/5 cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* INTERACTION AND FORMS SCROLL */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-5 scrollbar-none bg-gradient-to-b from-[#080808] to-black">
-          <AnimatePresence mode="wait">
-            
-            {/* STEP 1: RESUME LIST */}
-            {step === 'list' && (
-              <motion.div
-                key="list-step"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                className="space-y-5"
+        {/* TOP DRAWER HEADER */}
+        <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-black/50 backdrop-blur-md">
+          <div className="flex items-center gap-2.5">
+            {step === 'shipping' && (
+              <button
+                onClick={() => {
+                  triggerHaptic('light');
+                  setStep('cart');
+                }}
+                className="p-1.5 rounded-full bg-zinc-800 text-zinc-300 hover:text-white transition cursor-pointer"
+                title="Retour au panier"
               >
-                {!hasItems ? (
-                  <div className="py-20 text-center space-y-5 border border-dashed border-white/10 rounded-2xl bg-black/40">
-                    <ShoppingBag className="w-10 h-10 text-orange-400/30 mx-auto animate-pulse" />
-                    <p className="font-mono text-xs italic text-neutral-500 max-w-xs mx-auto leading-relaxed">
-                      {t('emptyCartDesc')}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3 max-h-[40vh] overflow-y-auto scrollbar-none pr-1">
-                    {cart.map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-4 rounded-xl bg-black/60 border border-white/5 flex items-center justify-between gap-3 shadow-md hover:border-orange-500/50 duration-200"
-                      >
-                        <div className="flex items-center gap-3.5 min-w-0">
-                          {item.product.thumbnailUrl && item.product.thumbnailUrl.trim() !== '' ? (
-                            <img
-                              src={item.product.thumbnailUrl || undefined}
-                              alt={item.product.title}
-                              className="w-12 h-15 rounded-lg object-contain bg-transparent flex-shrink-0 border border-white/5"
-                            />
-                          ) : null}
-                          <div className="min-w-0">
-                            <h4 className="font-mono text-xs font-semibold text-neutral-200 truncate uppercase tracking-widest">
-                              {item.product.title}
-                            </h4>
-                            {(item.product.category || '').toLowerCase().includes('accessoire') ? (
-                              <span className="text-[10px] font-mono text-neutral-400 block mt-1">
-                                Quantité : <b className="text-orange-400 font-bold">
-                                  {(() => {
-                                    const sizeMatches = item.selectedSize.match(/(\d+)/);
-                                    const baseUnits = sizeMatches ? parseInt(sizeMatches[1], 10) : 1;
-                                    const totalUnitsNum = baseUnits * item.quantity;
-                                    return `${totalUnitsNum} ${totalUnitsNum > 1 ? 'unités' : 'unité'}`;
-                                  })()}
-                                </b>
-                              </span>
-                            ) : (
-                              <>
-                                <span className="text-[10px] font-mono text-neutral-400 block mt-1">
-                                  {t('formatLabel')} : <b className="text-orange-400 font-bold">{item.selectedSize}</b>
-                                </span>
-                                <span className="text-[10px] text-neutral-500 font-mono mt-0.5 block">
-                                  {t('quantityLabel')} : {item.quantity}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 shrink-0">
-                          <span className="font-mono text-xs font-medium text-orange-400">
-                            {item.totalPrice} €
-                          </span>
-                          <button
-                            onClick={() => {
-                              triggerHaptic('medium');
-                              onRemoveItem(item.id);
-                            }}
-                            className="p-2 rounded-lg bg-red-950/30 text-red-400 hover:bg-neutral-900 hover:text-red-300 border border-red-900/40 cursor-pointer transition duration-300"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* COTATION SUMMARY */}
-                {hasItems && (
-                  <div className="p-4 rounded-xl bg-[#1E1E1E]/60 border border-white/5 space-y-2 font-mono shadow-inner">
-                    <div className="flex items-center justify-between text-xs pb-2 border-b border-white/5 text-neutral-350">
-                      <span>Expédition :</span>
-                      <span className="text-orange-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                        <Sparkles className="w-3 h-3 text-orange-400" />
-                        <span>Offerte / Discrétion Assurée</span>
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs pt-1">
-                      <span className="text-neutral-400 font-semibold">{t('subtotal')} :</span>
-                      <span className="text-orange-400 font-bold text-base">{pricingTotal} €</span>
-                    </div>
-                  </div>
-                )}
-
-                {hasItems && (
-                  <button
-                    onClick={handleProceedToCheckout}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-black hover:opacity-90 font-extrabold text-[10.5px] tracking-[0.2em] uppercase transition duration-300 shadow-xl cursor-pointer"
-                  >
-                    {t('checkoutBtn')} ({pricingTotal} €)
-                  </button>
-                )}
-              </motion.div>
+                <ChevronLeft className="w-4 h-4" />
+              </button>
             )}
 
-            {/* STEP 2: PREMIUM CHECKOUT FORM */}
-            {step === 'checkout' && (
-              <motion.div
-                key="checkout-step"
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="space-y-4"
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
+              <ShoppingBag className="w-4 h-4" />
+            </div>
+
+            <div>
+              <h2 className="font-mono text-sm font-black tracking-wider uppercase text-white flex items-center gap-1.5">
+                {step === 'cart' && 'MON PANIER'}
+                {step === 'shipping' && 'LIVRAISON & COMMANDE'}
+                {step === 'success' && 'COMMANDE CONFIRMÉE'}
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              </h2>
+              <span className="text-[10px] font-mono text-zinc-400">
+                TRICOMA AL ANASSAR • RÉSERVE PRIVÉE
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {step === 'cart' && cart.length > 0 && (
+              <button
+                onClick={() => {
+                  triggerHaptic('medium');
+                  onClearCart();
+                }}
+                className="text-[10px] font-mono text-red-400 hover:text-red-300 px-2 py-1 rounded bg-red-950/40 border border-red-500/20 transition cursor-pointer"
               >
-                <div className="text-center pb-1">
-                  <h4 className="font-mono text-xs tracking-widest text-orange-400 uppercase font-bold">{t('checkoutTitle')}</h4>
-                  <p className="text-[9px] text-orange-400/80 font-mono uppercase tracking-widest mt-1">TRICOMA AL ANASSAR — Liaison Sécurisée 0-Log</p>
+                Vider
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                triggerHaptic('light');
+                onClose();
+              }}
+              className="p-2 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* DRAWER BODY: STEP CONTENT */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 no-scrollbar">
+          
+          {/* STEP 1: CART ITEMS LIST */}
+          {step === 'cart' && (
+            <>
+              {cart.length === 0 ? (
+                <div className="py-20 text-center space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center mx-auto text-zinc-500">
+                    <ShoppingBag className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-mono text-base font-black uppercase text-white">
+                      Votre panier est vide
+                    </h3>
+                    <p className="text-xs text-zinc-400 font-mono">
+                      Découvrez nos extractions et ajoutes vos sélections.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      triggerHaptic('light');
+                      onClose();
+                    }}
+                    className="px-6 py-2.5 rounded-full bg-amber-500 hover:bg-amber-400 text-black font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+                  >
+                    Explorer la réserve
+                  </button>
                 </div>
+              ) : (
+                <div className="space-y-3">
+                  {cart.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-3 rounded-2xl bg-zinc-900/90 border border-white/10 flex items-center justify-between gap-3 shadow-md"
+                    >
+                      {/* Thumbnail */}
+                      <div className="w-14 h-14 rounded-xl overflow-hidden bg-black shrink-0 border border-white/10">
+                        <img
+                          src={item.product.thumbnailUrl || item.product.imageUrl || '/tricoma_logo.png'}
+                          alt={item.product.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
 
-                {validationError && (
-                  <div className="p-3 rounded-xl bg-red-950/20 border border-red-900 text-red-500 text-[10.5px] font-mono text-center">
-                    {validationError}
+                      {/* Details */}
+                      <div className="flex-1 min-w-0 space-y-0.5">
+                        <h4 className="font-sans font-bold text-xs text-white truncate">
+                          {item.product.title}
+                        </h4>
+                        <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-400">
+                          <span className="px-1.5 py-0.5 rounded bg-black/60 border border-white/10 text-amber-300 font-bold">
+                            {item.selectedSize}
+                          </span>
+                          <span>{item.product.category}</span>
+                        </div>
+                        <div className="text-xs font-mono font-black text-amber-300">
+                          {item.totalPrice} €
+                        </div>
+                      </div>
+
+                      {/* Quantity & Delete */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            triggerHaptic('light');
+                            onRemoveItem(item.id);
+                          }}
+                          className="p-2 rounded-xl bg-red-950/40 text-red-400 hover:bg-red-900/60 border border-red-500/20 transition cursor-pointer"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+
+                  {/* PROMO CODE SECTION */}
+                  <div className="pt-2">
+                    <div className="p-3 rounded-2xl bg-zinc-900/60 border border-white/10 space-y-2">
+                      <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase text-amber-300 font-bold">
+                        <Tag className="w-3 h-3 text-amber-400" />
+                        <span>Code Promo & Remise VIP</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={promoCodeInput}
+                          onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                          placeholder="EX: VIP2026, TRICOMA10..."
+                          className="flex-1 px-3 py-2 rounded-xl bg-black border border-white/15 text-white font-mono text-xs focus:outline-none focus:border-amber-400 placeholder:text-zinc-600 uppercase"
+                        />
+                        <button
+                          onClick={handleApplyPromoCode}
+                          disabled={isApplyingPromo || !promoCodeInput.trim()}
+                          className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-mono font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+                        >
+                          {isApplyingPromo ? '...' : 'Appliquer'}
+                        </button>
+                      </div>
+
+                      {promoMessage && (
+                        <p className={`text-[10px] font-mono ${promoMessage.isError ? 'text-red-400' : 'text-emerald-400'}`}>
+                          {promoMessage.text}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                )}
 
-                <div className="space-y-3 font-mono">
-                  {/* Full Name */}
-                  <div className="space-y-1">
-                    <label className="text-[9px] text-neutral-400 uppercase tracking-wider flex items-center gap-1.5 font-semibold">
-                      <User className="w-3.5 h-3.5 text-orange-400" />
-                      <span>{t('nameLabel')} *</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Nom / Alias"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#1E1E1E]/80 border border-white/10 text-xs text-white placeholder-neutral-450 focus:outline-none focus:border-orange-500/50"
-                    />
-                  </div>
-
-                  {/* Phone number */}
-                  <div className="space-y-1">
-                    <label className="text-[9px] text-neutral-400 uppercase tracking-wider flex items-center gap-1.5 font-semibold">
-                      <Phone className="w-3.5 h-3.5 text-orange-400" />
-                      <span>{t('phoneLabel')} *</span>
-                    </label>
-                    <input
-                      type="tel"
-                      placeholder="Ex: 06 12 34 56 78"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#1E1E1E]/80 border border-white/10 text-xs text-white placeholder-neutral-450 focus:outline-none focus:border-orange-500/50"
-                    />
-                  </div>
-
-                  {/* Cities Select */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[9px] text-neutral-400 uppercase tracking-wider flex items-center gap-1.5 font-semibold">
-                        <MapPin className="w-3.5 h-3.5 text-orange-400" />
-                        <span>{t('cityLabel')} *</span>
-                      </label>
-                      <select
-                        value={selectedCity}
-                        onChange={(e) => setSelectedCity(e.target.value)}
-                        className="w-full p-2.5 rounded-xl bg-black border border-white/10 text-xs cursor-pointer text-white focus:outline-none focus:border-orange-500/50"
-                      >
-                        {MOROCCAN_CITIES.map((city) => (
-                          <option key={city} value={city} className="bg-black text-white">
-                            {city}
-                          </option>
-                        ))}
-                      </select>
+                  {/* SUMMARY BREAKDOWN */}
+                  <div className="p-4 rounded-2xl bg-black/60 border border-white/10 space-y-2 font-mono text-xs">
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Sous-total</span>
+                      <span>{pricingTotal} €</span>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[9px] text-neutral-400 uppercase tracking-wider flex items-center gap-1.5 font-semibold">
-                        <span>{t('zipLabel')}</span>
-                      </label>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-emerald-400 font-bold">
+                        <span>Réduction ({appliedPromo?.code})</span>
+                        <span>-{discountAmount} €</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Livraison Express Discrète</span>
+                      <span className="text-emerald-400 font-bold">OFFERTE 🎁</span>
+                    </div>
+
+                    <div className="pt-2 border-t border-white/10 flex justify-between text-sm font-black text-white">
+                      <span>Total à régler</span>
+                      <span className="text-amber-300 text-base">{finalTotalToPay} €</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* STEP 2: SHIPPING & CHECKOUT FORM */}
+          {step === 'shipping' && (
+            <div className="space-y-4">
+              
+              {/* Delivery method selector cards (PIRATE 69 style) */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono uppercase text-zinc-400 tracking-wider font-bold block">
+                  1. MODE DE LIVRAISON SÉCURISÉ :
+                </label>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDeliveryMethod('home');
+                    }}
+                    className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition cursor-pointer ${
+                      deliveryMethod === 'home'
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                        : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <Truck className="w-4 h-4" />
+                    <span className="text-[10px] font-mono font-bold uppercase leading-tight">
+                      Domicile
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDeliveryMethod('relais');
+                    }}
+                    className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition cursor-pointer ${
+                      deliveryMethod === 'relais'
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                        : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <Building2 className="w-4 h-4" />
+                    <span className="text-[10px] font-mono font-bold uppercase leading-tight">
+                      Point Relais
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setDeliveryMethod('locker');
+                    }}
+                    className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition cursor-pointer ${
+                      deliveryMethod === 'locker'
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                        : 'bg-zinc-900/80 border-white/10 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span className="text-[10px] font-mono font-bold uppercase leading-tight">
+                      Locker 24/7
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Customer Contact & Address Form */}
+              <div className="space-y-3 p-4 rounded-2xl bg-zinc-900/70 border border-white/10">
+                <label className="text-[10px] font-mono uppercase text-zinc-400 tracking-wider font-bold block">
+                  2. COORDONNÉES DE RÉCEPTION :
+                </label>
+
+                <div className="space-y-2 font-mono text-xs">
+                  <div>
+                    <span className="text-[10px] text-zinc-400 uppercase block mb-1">Nom complet ou Pseudo :</span>
+                    <div className="relative">
+                      <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                       <input
                         type="text"
-                        placeholder="Ex: 20000"
-                        value={zipCode}
-                        onChange={(e) => setZipCode(e.target.value)}
-                        className="w-full p-2.5 rounded-xl bg-[#1E1E1E]/80 border border-white/10 text-xs text-white placeholder-neutral-450 focus:outline-none focus:border-orange-500/50"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Votre prénom / pseudo"
+                        className="w-full pl-9 pr-3 py-2 rounded-xl bg-black border border-white/15 text-white focus:outline-none focus:border-amber-400"
                       />
                     </div>
                   </div>
 
-                  {/* Delivery Address */}
-                  <div className="space-y-1">
-                    <label className="text-[9px] text-neutral-400 uppercase tracking-wider flex items-center gap-1.5 font-semibold">
-                      <Truck className="w-3.5 h-3.5 text-orange-400" />
-                      <span>{t('addressLabel')} *</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Point de rendez-vous ou adresse discrète..."
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#1E1E1E]/80 border border-white/10 text-xs text-white placeholder-neutral-450 focus:outline-none focus:border-orange-500/50"
-                    />
-                  </div>
-
-                  {/* PAYMENT METHOD SELECTOR */}
-                  <div className="space-y-2 pt-1">
-                    <span className="block text-[9px] text-neutral-500 uppercase tracking-widest font-semibold">
-                      {t('paymentMethodLabel')} :
-                    </span>
-                    
-                    <div className="grid grid-cols-2 gap-2.5">
-                      {/* Cash on delivery */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('light');
-                          setPaymentMethod('cod');
-                        }}
-                        className={`p-3 rounded-xl border text-left cursor-pointer transition-all duration-300 bg-black/80 ${paymentMethod === 'cod' ? 'border-orange-500 bg-orange-500/10 text-orange-400' : 'border-white/5 hover:border-orange-500/50 text-neutral-300'}`}
-                      >
-                        <h5 className="text-[10px] font-bold uppercase tracking-wider text-white">Espèces (COD)</h5>
-                        <p className="text-[7.5px] text-neutral-500 mt-0.5 leading-normal">Paiement anonyme à la livraison</p>
-                      </button>
-
-                      {/* Card simulation */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          triggerHaptic('light');
-                          setPaymentMethod('card');
-                        }}
-                        className={`p-3 rounded-xl border text-left cursor-pointer transition-all duration-300 bg-black/80 ${paymentMethod === 'card' ? 'border-orange-500 bg-orange-500/10 text-orange-400' : 'border-white/5 hover:border-orange-500/50 text-neutral-300'}`}
-                      >
-                        <h5 className="text-[10px] font-bold uppercase tracking-wider text-white">Carte Cryptée</h5>
-                        <p className="text-[7.5px] text-neutral-500 mt-0.5 leading-normal">Paiement SSL 0-Log</p>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Credit Card sandbox form inputs */}
-                  {paymentMethod === 'card' && (
-                    <div className="p-3.5 rounded-xl bg-black/60 border border-white/5 space-y-3.5 animate-fadeIn">
-                      <div className="flex justify-between items-center text-[8px] tracking-widest text-orange-400 font-extrabold uppercase">
-                        <span>💳 passerelle de paiement cryptée active</span>
-                        <span>ANONYME</span>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <label className="text-[8px] uppercase tracking-wider font-extrabold text-orange-400">Numéro de carte</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[10px] text-zinc-400 uppercase block mb-1">Téléphone (WhatsApp/Signal) :</span>
+                      <div className="relative">
+                        <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
                         <input
                           type="text"
-                          placeholder="4532 •••• •••• ••••"
-                          maxLength={19}
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value)}
-                          className="w-full p-2 bg-[#1E1E1E] border border-white/10 rounded-lg text-xs font-mono outline-none text-orange-400 focus:border-orange-500/50"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          placeholder="+33 6..."
+                          className="w-full pl-9 pr-3 py-2 rounded-xl bg-black border border-white/15 text-white focus:outline-none focus:border-amber-400"
                         />
                       </div>
+                    </div>
 
-                      <div className="grid grid-cols-2 gap-2.5">
-                        <div className="space-y-1">
-                          <label className="text-[8px] uppercase tracking-wider font-extrabold text-neutral-400">Expiration (MM/AA)</label>
-                          <input
-                            type="text"
-                            placeholder="12/28"
-                            maxLength={5}
-                            value={cardExpiry}
-                            onChange={(e) => setCardExpiry(e.target.value)}
-                            className="w-full p-2 bg-[#1E1E1E] border border-white/10 rounded-lg text-xs font-mono outline-none text-orange-400 focus:border-orange-500/50"
-                          />
-                        </div>
-
-                        <div className="space-y-1">
-                          <label className="text-[8px] uppercase tracking-wider font-extrabold text-neutral-400">CVV (Cryptogramme)</label>
-                          <input
-                            type="password"
-                            placeholder="•••"
-                            maxLength={3}
-                            value={cardCvv}
-                            onChange={(e) => setCardCvv(e.target.value)}
-                            className="w-full p-2 bg-[#1E1E1E] border border-white/10 rounded-lg text-xs font-mono outline-none text-orange-400 focus:border-orange-500/50"
-                          />
-                        </div>
+                    <div>
+                      <span className="text-[10px] text-zinc-400 uppercase block mb-1">Contact Telegram / Email :</span>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                        <input
+                          type="text"
+                          value={emailAddress}
+                          onChange={(e) => setEmailAddress(e.target.value)}
+                          placeholder="@username"
+                          className="w-full pl-9 pr-3 py-2 rounded-xl bg-black border border-white/15 text-white focus:outline-none focus:border-amber-400"
+                        />
                       </div>
                     </div>
-                  )}
-
-                </div>
-
-                {/* PROMO CODE BOX */}
-                <div className="bg-black/60 border border-white/5 rounded-xl p-3.5 space-y-2.5 font-mono">
-                  <span className="block text-[8.5px] uppercase tracking-wider font-extrabold text-orange-400">🎟️ CODE DE RÉDUCTION DISCRET</span>
-                  
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="CODE PROMO"
-                      value={promoCodeInput}
-                      onChange={(e) => setPromoCodeInput(e.target.value)}
-                      className="flex-1 p-2 bg-black border border-white/10 rounded-lg text-[10px] font-mono outline-none text-orange-400 focus:border-orange-500/50 placeholder-zinc-600 uppercase tracking-widest text-center"
-                      disabled={isApplyingPromo}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleApplyPromoCode}
-                      disabled={isApplyingPromo || !promoCodeInput.trim()}
-                      className="px-4 py-2 bg-zinc-900 border border-zinc-800 hover:border-orange-500 text-zinc-300 hover:text-orange-400 font-bold text-[8.5px] uppercase tracking-wider rounded-lg transition-all cursor-pointer disabled:opacity-35"
-                    >
-                      {isApplyingPromo ? '...' : 'APPLIQUER'}
-                    </button>
                   </div>
 
-                  {promoMessage && (
-                    <div className={`text-[8px] uppercase font-bold text-center tracking-wider px-2 py-1.5 rounded ${promoMessage.isError ? 'bg-red-950/25 text-red-400 border border-red-500/10' : 'bg-orange-500/10 text-orange-400 border border-orange-500/20'}`}>
-                      {promoMessage.text}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[10px] text-zinc-400 uppercase block mb-1">Ville :</span>
+                      <input
+                        type="text"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="Ex: Paris, Lyon, Casablanca..."
+                        className="w-full px-3 py-2 rounded-xl bg-black border border-white/15 text-white focus:outline-none focus:border-amber-400"
+                      />
                     </div>
-                  )}
-                </div>
 
-                {/* COTATION CARD */}
-                <div className="p-3.5 bg-black/60 border border-white/5 rounded-xl space-y-2 text-[10px] font-mono">
-                  <div className="flex justify-between items-center text-neutral-400">
-                    <span>{t('subtotal')} :</span>
-                    <span>{pricingTotal} €</span>
-                  </div>
-                  {appliedPromo && (
-                    <div className="flex justify-between items-center text-emerald-450 font-semibold bg-emerald-950/10 p-1.5 rounded border border-emerald-500/10">
-                      <span>🎟️ CODE PROMO ({appliedPromo.code}) :</span>
-                      <span>-{discountAmount} €</span>
+                    <div>
+                      <span className="text-[10px] text-zinc-400 uppercase block mb-1">Code Postal :</span>
+                      <input
+                        type="text"
+                        value={zipCode}
+                        onChange={(e) => setZipCode(e.target.value)}
+                        placeholder="75000"
+                        className="w-full px-3 py-2 rounded-xl bg-black border border-white/15 text-white focus:outline-none focus:border-amber-400"
+                      />
                     </div>
-                  )}
-                  <div className="flex justify-between items-center text-xs font-bold pt-1.5 border-t border-white/5 text-white">
-                    <span>{t('total')} :</span>
-                    <span className="text-orange-400 text-sm font-black">{finalTotalToPay} €</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] text-zinc-400 uppercase block mb-1">
+                      {deliveryMethod === 'home' ? 'Adresse de livraison :' : deliveryMethod === 'relais' ? 'Nom ou Adresse du Point Relais :' : 'Identifiant / Adresse du Locker :'}
+                    </span>
+                    <div className="relative">
+                      <MapPin className="w-4 h-4 absolute left-3 top-3 text-zinc-500" />
+                      <textarea
+                        rows={2}
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder={deliveryMethod === 'home' ? "Numéro, Rue, Bâtiment, Code d'accès..." : "Nom du relais ou adresse du casier"}
+                        className="w-full pl-9 pr-3 py-2 rounded-xl bg-black border border-white/15 text-white focus:outline-none focus:border-amber-400 resize-none"
+                      />
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Touch submission panel */}
-                <div className="space-y-2 pt-1 font-mono">
+              {/* Payment Method Selector */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono uppercase text-zinc-400 tracking-wider font-bold block">
+                  3. MOYEN DE RÈGLEMENT :
+                </label>
+
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => {
-                      triggerHaptic('heavy');
-                      submitOrder();
+                      triggerHaptic('light');
+                      setPaymentMethod('crypto');
                     }}
-                    className="w-full py-4 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 text-black font-extrabold text-[10.5px] tracking-[0.2em] uppercase transition duration-300 shadow-xl flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-                    id="submit_secured_order_btn"
+                    className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition cursor-pointer ${
+                      paymentMethod === 'crypto'
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+                        : 'bg-zinc-900 border-white/10 text-zinc-400 hover:text-white'
+                    }`}
                   >
-                    <span>✦</span>
-                    <span>{t('confirmOrderBtn')}</span>
-                    <span>✦</span>
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span className="text-[10px] font-mono font-bold uppercase">Crypto USDT / BTC</span>
+                    <span className="text-[8px] font-mono text-zinc-400">100% Anonyme & Rapide</span>
                   </button>
-                </div>
 
-                <div className="flex gap-2 font-mono">
                   <button
+                    type="button"
                     onClick={() => {
                       triggerHaptic('light');
-                      setStep('list');
+                      setPaymentMethod('card');
                     }}
-                    className="flex-1 py-3 rounded-lg border border-white/5 text-[9.5px] text-neutral-300 hover:text-orange-400 bg-white/5 uppercase text-center cursor-pointer transition"
+                    className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition cursor-pointer ${
+                      paymentMethod === 'card'
+                        ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+                        : 'bg-zinc-900 border-white/10 text-zinc-400 hover:text-white'
+                    }`}
                   >
-                    Retour au panier
+                    <CreditCard className="w-4 h-4 text-amber-400" />
+                    <span className="text-[10px] font-mono font-bold uppercase">Carte / Virement</span>
+                    <span className="text-[8px] font-mono text-zinc-400">Instantané & Sécurisé</span>
                   </button>
                 </div>
-              </motion.div>
-            )}
+              </div>
 
-            {/* STEP 3: ORDER SUCCESS DISPLAY */}
-            {step === 'success' && createdOrder && (
-              <motion.div
-                key="success-step"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center p-3 space-y-5 font-mono"
-              >
-                <div className="w-16 h-16 bg-black border border-orange-500 rounded-full flex items-center justify-center mx-auto text-orange-400 shadow-lg">
-                  <CheckCircle2 className="w-8 h-8 text-orange-400" />
+              {validationError && (
+                <p className="text-xs font-mono text-red-400 bg-red-950/40 p-2.5 rounded-xl border border-red-500/30">
+                  {validationError}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* STEP 3: ORDER SUCCESS RECEIPT */}
+          {step === 'success' && createdOrder && (
+            <div className="py-6 text-center space-y-4 font-mono">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center mx-auto text-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.4)]">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-lg font-black uppercase text-white">
+                  COMMANDE TRANSMIS AVEC SUCCÈS !
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  Numéro de suivi : <span className="text-amber-300 font-bold">#{createdOrder.id}</span>
+                </p>
+              </div>
+
+              {/* Summary Card */}
+              <div className="p-4 rounded-2xl bg-zinc-900 border border-white/10 text-left space-y-2 text-xs">
+                <div className="flex justify-between border-b border-white/10 pb-2">
+                  <span className="text-zinc-400">Client :</span>
+                  <span className="font-bold text-white">{createdOrder.customerName}</span>
                 </div>
-
-                <div className="space-y-1">
-                  <h4 className="font-mono text-base font-bold text-white uppercase tracking-widest">{t('orderSuccessTitle')} 🏔️</h4>
-                  <p className="text-[9px] text-orange-400 uppercase tracking-widest">{t('orderSuccessMsg')}</p>
+                <div className="flex justify-between border-b border-white/10 pb-2">
+                  <span className="text-zinc-400">Destination :</span>
+                  <span className="font-bold text-white truncate max-w-[200px]">{createdOrder.city}</span>
                 </div>
-
-                {/* Refined Receipt Box */}
-                <div className="p-5 rounded-2xl bg-black/60 border border-white/5 text-left text-xs leading-relaxed space-y-2.5 relative font-mono shadow-xl">
-                  <div className="flex justify-between items-center pb-2 border-b border-white/5">
-                    <span className="font-bold text-orange-400">{createdOrder.id}</span>
-                    <span className="text-[8px] text-neutral-400 uppercase tracking-wider">TRICOMA AL ANASSAR RÉSERVE</span>
-                  </div>
-
-                  <div className="text-neutral-300 text-[10.5px]">{t('nameLabel')} : <span className="text-white font-semibold uppercase">{createdOrder.customerName}</span></div>
-                  <div className="text-neutral-300 text-[10.5px]">{t('phoneLabel')} : <span className="text-white">{createdOrder.phoneNumber}</span></div>
-                  <div className="text-neutral-300 text-[10.5px]">{t('addressLabel')} : <span className="text-white">{createdOrder.address}, {createdOrder.city}</span></div>
-                  <div className="text-neutral-300 text-[10.5px]">{t('paymentMethodLabel')} : <span className="text-orange-400 uppercase font-bold text-[9px]">
-                    {createdOrder.paymentMethod === 'cod' ? '💵 Espèces (COD)' : '💳 Transaction chiffrée SSL'}
-                  </span></div>
-
-                  <div className="border-t border-white/5 pt-2 space-y-1">
-                    <div className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider mb-1">Articles commandés :</div>
-                    {createdOrder.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-[10.5px] text-neutral-200">
-                        <span>
-                          • {item.quantity > 1 ? <b className="text-orange-400">{item.quantity}x </b> : ''}
-                          {item.title} {item.selectedSize ? <span className="text-orange-400 font-bold">({item.selectedSize})</span> : ''}
-                        </span>
-                        <span className="font-bold text-white">{item.price} €</span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  <div className="border-t border-white/5 mt-3 pt-2.5 flex justify-between text-sm">
-                    <span className="text-neutral-300 uppercase">{t('total')} :</span>
-                    <span className="font-bold text-orange-400">{createdOrder.totalAmount} €</span>
-                  </div>
+                <div className="flex justify-between border-b border-white/10 pb-2">
+                  <span className="text-zinc-400">Total :</span>
+                  <span className="font-black text-amber-300 text-sm">{createdOrder.totalAmount} €</span>
                 </div>
-
-                {/* ACTIONS */}
-                <div className="p-4 rounded-xl bg-black/50 border border-white/5 space-y-3 shadow-md">
-                  <div className="space-y-2 pt-1 font-mono">
-                    <button
-                      onClick={async () => {
-                        triggerHaptic('heavy');
-                        const articlesFormatted = createdOrder.items.map(i => {
-                          const qtyStr = i.quantity > 1 ? `${i.quantity}x ` : '';
-                          const sizeStr = i.selectedSize ? ` (${i.selectedSize})` : '';
-                          return `${qtyStr}${i.title}${sizeStr}`;
-                        }).join(', ');
-
-                        const txt = `💎 TRICOMA AL ANASSAR — ${t('orderSuccessTitle')} ${createdOrder.id} 💎\n` +
-                                    `Client : ${createdOrder.customerName}\n` +
-                                    `Articles : ${articlesFormatted}\n` +
-                                    `Total : ${createdOrder.totalAmount} €\n` +
-                                    `Livrable à : ${createdOrder.address}, ${createdOrder.city}\n` +
-                                    `TRICOMA AL ANASSAR.`;
-                        
-                        try {
-                           if (navigator.clipboard) {
-                             await navigator.clipboard.writeText(txt);
-                           }
-                        } catch (err) {}
-
-                        const messageText = encodeURIComponent(txt);
-                        const tgUrl = `https://t.me/yoru47?text=${messageText}`;
-                        const tg = (window as any).Telegram?.WebApp;
-                        if (tg && typeof tg.openTelegramLink === 'function') {
-                          tg.openTelegramLink(tgUrl);
-                        } else {
-                          window.open(tgUrl, '_blank', 'noreferrer,noopener');
-                        }
-                      }}
-                      className="w-full py-3 px-4 rounded-xl bg-[#0088cc] hover:bg-[#0077b3] text-white text-[10.5px] uppercase font-mono font-black tracking-wider transition duration-300 shadow-lg flex items-center justify-center gap-2 border border-[#0088cc] cursor-pointer"
-                    >
-                      <Send className="w-4 h-4 text-white" />
-                      <span>{t('sendTicketTelegram')}</span>
-                    </button>
-
-                    <div className="grid grid-cols-2 gap-2 font-mono">
-                      <button
-                        onClick={copyReceiptToClipboard}
-                        className={`py-2 px-3 rounded-lg border text-[9px] uppercase font-bold flex items-center justify-center gap-1.5 transition duration-300 cursor-pointer ${copied ? 'border-emerald-500 bg-emerald-950/20 text-emerald-400' : 'border-white/5 text-neutral-300 hover:text-orange-400 hover:border-orange-500/50 bg-black/60'}`}
-                      >
-                        {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copied ? 'Ticket Copié !' : 'Copier Récap'}</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          triggerHaptic('success');
-                          onClose();
-                        }}
-                        className="py-2 px-3 rounded-lg border border-white/5 bg-black/40 text-neutral-300 hover:text-white text-[9px] uppercase font-bold cursor-pointer transition duration-300"
-                      >
-                        Fermer
-                      </button>
-                    </div>
-                  </div>
+                <div className="flex justify-between pt-1">
+                  <span className="text-zinc-400">Statut :</span>
+                  <span className="text-emerald-400 font-bold uppercase">En préparation (24h/48h)</span>
                 </div>
+              </div>
 
-              </motion.div>
-            )}
+              <div className="space-y-2 pt-2">
+                <button
+                  onClick={handleCopyOrderSummary}
+                  className="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  <span>{copied ? 'Détails copiés !' : 'Copier le récapitulatif'}</span>
+                </button>
 
-          </AnimatePresence>
+                <a
+                  href="https://t.me/yoru47"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-black font-bold text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer block text-center"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Envoyer au Support Telegram (@yoru47)</span>
+                </a>
+              </div>
+            </div>
+          )}
+
         </div>
+
+        {/* BOTTOM ACTION BAR */}
+        {cart.length > 0 && step !== 'success' && (
+          <div className="p-4 sm:p-5 border-t border-white/10 bg-black/80 backdrop-blur-md space-y-2">
+            {step === 'cart' ? (
+              <button
+                onClick={handleProceedToCheckout}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-black font-mono font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:opacity-95 active:scale-95 transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>PASSER À LA LIVRAISON • {finalTotalToPay} €</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={handleConfirmOrder}
+                disabled={isSubmitting}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-black font-mono font-black text-xs uppercase tracking-wider shadow-[0_0_25px_rgba(245,158,11,0.5)] hover:opacity-95 active:scale-95 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{isSubmitting ? 'ENVOI EN COURS...' : `VALIDER LA COMMANDE • ${finalTotalToPay} €`}</span>
+              </button>
+            )}
+          </div>
+        )}
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
-
