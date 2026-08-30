@@ -724,12 +724,22 @@ export default function CartDrawer({
                 </button>
 
                 <a
+                  href="https://t.me/Tricomaalanassar"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:opacity-95 text-black font-black text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer block text-center shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Envoyer au Contact Privé (@Tricomaalanassar)</span>
+                </a>
+
+                <a
                   href="https://t.me/yoru47"
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-black font-bold text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer block text-center"
+                  className="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer block text-center border border-white/10"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-4 h-4 text-sky-400" />
                   <span>Envoyer au Support Telegram (@yoru47)</span>
                 </a>
               </div>

@@ -1584,7 +1584,7 @@ const DEFAULT_SETTINGS = {
   launchScreenUrl: '/tricoma_logo.png',
   homepageHeroBgUrl: '/tricoma_logo.png',
   logoUrl: '/tricoma_logo.png',
-  telegramChannelUrl: 'https://t.me/+ox8xo-KqAk1jYjI0',
+  telegramChannelUrl: 'https://t.me/+bMAog56A3AthODM0',
   telegramSupportUrl: 'https://t.me/yoru47',
   introStatusLine: 'TRICOMA AL ANASSAR — RÉSERVE PRIVÉE',
   sectionTitles: [
@@ -4872,7 +4872,7 @@ async function sendInstagramPromoMessage(chatId: string | number): Promise<{ suc
     return { success: false };
   }
   
-  const defaultText = `💎 TRICOMA AL ANASSAR — RÉSERVE PRIVÉE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📲 CANAUX OFFICIELS & CONTACT :\n📢 Canal Telegram : https://t.me/+ox8xo-KqAk1jYjI0\n💬 Contact Privé & Support : @yoru47\n\n🛍️ COMMENT COMMANDER ?\nCliquez ci-dessous sur « 🛒 Accéder au Shop » pour découvrir le menu et passer commande.\n\nTRICOMA AL ANASSAR — Pure Excellence ✨`;
+  const defaultText = `💎 TRICOMA AL ANASSAR — RÉSERVE PRIVÉE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📲 CANAUX OFFICIELS & CONTACT :\n📢 Canal Telegram : https://t.me/+bMAog56A3AthODM0\n👤 Contact Privé : @Tricomaalanassar\n💬 Support : @yoru47\n\n🛍️ COMMENT COMMANDER ?\nCliquez ci-dessous sur « 🛒 Accéder au Shop » pour découvrir le menu et passer commande.\n\nTRICOMA AL ANASSAR — Pure Excellence ✨`;
   let promoMessage = defaultText;
   let promoBtnLabel = "🛒 Accéder au Shop 🛍️";
   let promoUrl1 = "";
@@ -5129,7 +5129,7 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
       try {
         const appUrl = getTelegramAppUrl();
         let logoUrl = '';
-        let channelLink = 'https://t.me/+ox8xo-KqAk1jYjI0';
+        let channelLink = 'https://t.me/+bMAog56A3AthODM0';
         try {
           const settings = loadSettingsFromDisk();
           if (settings && settings.logoUrl && settings.logoUrl.trim() !== '') {
@@ -5137,7 +5137,7 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
           }
           if (settings && settings.telegramChannelUrl && settings.telegramChannelUrl.trim() !== '') {
             const rawTg = settings.telegramChannelUrl.trim();
-            if (!rawTg.includes('jzS4uQkjH3hmYzM0') && !rawTg.includes('ZOIX0z1yVl84MWI8') && !rawTg.includes('gLPwu9H2-d4yZWE0')) {
+            if (!rawTg.includes('jzS4uQkjH3hmYzM0') && !rawTg.includes('ZOIX0z1yVl84MWI8') && !rawTg.includes('gLPwu9H2-d4yZWE0') && !rawTg.includes('ox8xo-KqAk1jYjI0')) {
               channelLink = rawTg;
             }
           }
@@ -5145,7 +5145,7 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
           console.warn('[TELEGRAM BOT] Failed to load logo settings.', settingsErr);
         }
 
-        const welcomeText = `💎 TRICOMA AL ANASSAR — RÉSERVE PRIVÉE OFFICIELLE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📢 Canal Officiel : ${channelLink}\n💬 Support & Contact Privé : @yoru47\n\n👉 Cliquez ci-dessous sur « 🛒 Accéder au Shop » pour ouvrir le shop directement.`;
+        const welcomeText = `💎 TRICOMA AL ANASSAR — RÉSERVE PRIVÉE OFFICIELLE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📢 Canal Officiel : ${channelLink}\n👤 Contact Privé : @Tricomaalanassar\n💬 Support : @yoru47\n\n👉 Cliquez ci-dessous sur « 🛒 Accéder au Shop » pour ouvrir le shop directement.`;
 
         // Configure user's personal chat menu button directly to active appUrl
         fetch(`https://api.telegram.org/bot${token}/setChatMenuButton`, {
@@ -5174,7 +5174,13 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
               url: channelLink
             },
             {
-              text: "💬 Contact Privé",
+              text: "👤 Contact Privé",
+              url: "https://t.me/Tricomaalanassar"
+            }
+          ],
+          [
+            {
+              text: "💬 Support (@yoru47)",
               url: "https://t.me/yoru47"
             }
           ]

@@ -12,11 +12,25 @@ interface ContactViewProps {
 export default function ContactView({ branding, triggerHaptic, showToast }: ContactViewProps) {
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
 
-  const telegramChannel = branding?.telegramChannelUrl || 'https://t.me/+ox8xo-KqAk1jYjI0';
+  const telegramChannel = branding?.telegramChannelUrl || 'https://t.me/+bMAog56A3AthODM0';
   const telegramSupport = branding?.telegramSupportUrl || 'https://t.me/yoru47';
+  const telegramPrivate = 'https://t.me/Tricomaalanassar';
   const instagram = branding?.instagramUrl || 'https://instagram.com/aliensfarms';
 
   const contacts = [
+    {
+      id: 'tg-private',
+      title: 'Contact Privé Telegram',
+      subtitle: 'Liaison directe & commandes exclusives',
+      handle: telegramPrivate,
+      displayHandle: '@Tricomaalanassar (Privé)',
+      badge: 'DIRECT 🟢',
+      badgeColor: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
+      icon: Send,
+      color: 'from-amber-950/40 via-zinc-900 to-black border-amber-500/30 hover:border-amber-400',
+      btnText: 'Ouvrir le Contact Privé',
+      btnClass: 'bg-gradient-to-r from-amber-400 to-yellow-500 hover:opacity-95 text-black font-black',
+    },
     {
       id: 'tg-support',
       title: 'Support Direct Telegram (24/7)',
@@ -28,7 +42,7 @@ export default function ContactView({ branding, triggerHaptic, showToast }: Cont
       icon: Headphones,
       color: 'from-emerald-950/40 via-zinc-900 to-black border-emerald-500/30 hover:border-emerald-400',
       btnText: 'Ouvrir le Support Direct',
-      btnClass: 'bg-gradient-to-r from-amber-400 to-yellow-500 hover:opacity-95 text-black font-black',
+      btnClass: 'bg-zinc-800 hover:bg-zinc-700 text-white font-bold',
     },
     {
       id: 'tg-channel',
