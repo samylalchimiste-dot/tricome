@@ -1639,6 +1639,29 @@ function saveSettingsToDisk(data: any) {
   }
 }
 
+function sanitizeProductData(p: any): any {
+  if (!p || typeof p !== 'object') return p;
+  let author = (p.author || '').trim();
+  if (!author || /biscotti|aliens|biscottiboy/i.test(author)) {
+    author = 'TRICOMA LAANASSAR';
+  }
+  let title = (p.title || '').replace(/biscotti(\s*boys)?/gi, 'TRICOMA LAANASSAR').trim();
+  let desc = (p.description || '').replace(/biscotti(\s*boys)?/gi, 'TRICOMA LAANASSAR').trim();
+  let category = (p.category || 'STATIC').replace(/biscotti(\s*boys)?/gi, 'TRICOMA LAANASSAR').trim();
+
+  return {
+    ...p,
+    author: author || 'TRICOMA LAANASSAR',
+    title: title || 'TRICOMA SÉLECTION',
+    description: desc,
+    category: category || 'STATIC',
+    currency: 'EUR',
+    videoUrl: getBestMediaUrl(p.videoUrl, undefined),
+    thumbnailUrl: getBestMediaUrl(p.thumbnailUrl, undefined),
+    imageUrl: getBestMediaUrl(p.imageUrl, undefined),
+  };
+}
+
 function loadProductsFromDisk() {
   try {
     if (fs.existsSync(PRODUCTS_FILE)) {
@@ -1652,13 +1675,7 @@ function loadProductsFromDisk() {
             const author = (p.author || '').toUpperCase();
             return !cat.includes('ACCESSOIR') && !zone.includes('ACCESSOIR') && !author.includes('HASH');
           })
-          .map((p: any) => ({
-            ...p,
-            currency: 'EUR',
-            videoUrl: getBestMediaUrl(p.videoUrl, undefined),
-            thumbnailUrl: getBestMediaUrl(p.thumbnailUrl, undefined),
-            imageUrl: getBestMediaUrl(p.imageUrl, undefined),
-          }));
+          .map(sanitizeProductData);
       }
       console.warn('[LOAD_PRODUCTS] Parsed value is not an array. Recovering to default.');
     }
@@ -1668,36 +1685,26 @@ function loadProductsFromDisk() {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
         console.log(`[LOAD_PRODUCTS] Successfully restored ${parsed.length} products from workspace cwd backup.`);
-        try {
-          fs.writeFileSync(PRODUCTS_FILE, raw, 'utf-8');
-        } catch (e) {}
-        return parsed
+        const cleaned = parsed
           .filter((p: any) => {
             const cat = (p.category || '').toUpperCase();
             const zone = (p.displayZone || '').toUpperCase();
             const author = (p.author || '').toUpperCase();
             return !cat.includes('ACCESSOIR') && !zone.includes('ACCESSOIR') && !author.includes('HASH');
           })
-          .map((p: any) => ({
-            ...p,
-            currency: 'EUR',
-            videoUrl: getBestMediaUrl(p.videoUrl, undefined),
-            thumbnailUrl: getBestMediaUrl(p.thumbnailUrl, undefined),
-            imageUrl: getBestMediaUrl(p.imageUrl, undefined),
-          }));
+          .map(sanitizeProductData);
+        try {
+          fs.writeFileSync(PRODUCTS_FILE, JSON.stringify(cleaned, null, 2), 'utf-8');
+          fs.writeFileSync(rootPath, JSON.stringify(cleaned, null, 2), 'utf-8');
+        } catch (e) {}
+        return cleaned;
       }
     }
   } catch (err) {
     console.error('Error reading products from disk:', err);
   }
   // Safe default trigger ONLY if no backups exist on workspace copy either
-  const mappedDefaults = DEFAULT_PRODUCTS.map((p: any) => ({
-    ...p,
-    currency: 'EUR',
-    videoUrl: getBestMediaUrl(p.videoUrl, undefined),
-    thumbnailUrl: getBestMediaUrl(p.thumbnailUrl, undefined),
-    imageUrl: getBestMediaUrl(p.imageUrl, undefined),
-  }));
+  const mappedDefaults = DEFAULT_PRODUCTS.map(sanitizeProductData);
   saveProductsToDisk(mappedDefaults);
   return mappedDefaults;
 }
@@ -1944,10 +1951,17 @@ async function loadProductsFirestore(): Promise<any[]> {
           const author = (p.author || '').toUpperCase();
           return !cat.includes('ACCESSOIR') && !zone.includes('ACCESSOIR') && !author.includes('HASH');
         })
-        .map((p: any) => ({
-          ...p,
-          currency: 'EUR'
-        }));
+        .map(sanitizeProductData);
+
+      // Auto-update healed cloud products if they contained legacy brand references
+      if (!isFirestoreWriteDisabled) {
+        for (const p of normalizedList) {
+          try {
+            setDoc(doc(db, 'products', p.id), p).catch(() => {});
+          } catch (_) {}
+        }
+      }
+
       saveProductsToDisk(normalizedList);
       return normalizedList;
     }
@@ -2764,6 +2778,11 @@ async function syncLocalToFirestoreIfNeeded() {
           data.introStatusLine = 'TRICOMA AL ANASSAR — RÉSERVE PRIVÉE';
           needsUpdate = true;
         }
+
+        if (data.promoImageUrl && (data.promoImageUrl.includes('biscotti') || data.promoImageUrl.includes('aliens'))) {
+          data.promoImageUrl = data.logoUrl || '';
+          needsUpdate = true;
+        }
         
         const hasStaleSection = data.sectionTitles && data.sectionTitles.some((t: any) => 
           t.text?.includes('COLL') || t.text?.includes('PYJAMA') || t.text?.includes('LOUNGE')
@@ -2876,13 +2895,22 @@ async function syncLocalToFirestoreIfNeeded() {
             }
           }
           
-          console.log(`[FIRESTORE SYNC] Merged ${cloudProducts.length} cloud products with ${localProducts.length} local products. Total: ${mergedList.length}. Saving to disk...`);
-          saveProductsToDisk(mergedList);
+          const sanitizedMergedList = mergedList
+            .filter((p: any) => {
+              const cat = (p.category || '').toUpperCase();
+              const zone = (p.displayZone || '').toUpperCase();
+              const author = (p.author || '').toUpperCase();
+              return !cat.includes('ACCESSOIR') && !zone.includes('ACCESSOIR') && !author.includes('HASH');
+            })
+            .map(sanitizeProductData);
+          
+          console.log(`[FIRESTORE SYNC] Merged ${cloudProducts.length} cloud products with ${localProducts.length} local products. Total: ${sanitizedMergedList.length}. Saving to disk...`);
+          saveProductsToDisk(sanitizedMergedList);
 
           // Auto-healing products in cloud database once quota is restored
           if (!isFirestoreWriteDisabled) {
-            console.log('[FIRESTORE SYNC] Firestore writable. Automatically healing cloud products with permanent Firebase Storage URLs...');
-            for (const p of mergedList) {
+            console.log('[FIRESTORE SYNC] Firestore writable. Automatically healing cloud products with sanitized brand values...');
+            for (const p of sanitizedMergedList) {
               try {
                 await setDoc(doc(db, 'products', p.id), p);
                 console.log(`[FIRESTORE SYNC] Successfully healed product doc on live cloud: "${p.title}"`);

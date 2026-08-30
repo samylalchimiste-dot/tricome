@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { VideoItem, Order, BrandingSettings, SectionTitle, WhitelistItem, Reward, PromoCode, PendingApproval, ReviewItem, UserProfile } from './types';
+import { VideoItem, Order, BrandingSettings, SectionTitle, WhitelistItem, Reward, PromoCode, PendingApproval, ReviewItem, UserProfile, getCleanAuthor } from './types';
 
 // Converts a Blob/File to a Base64 data URL for persistence
 function blobToBase64(blob: Blob): Promise<string> {
@@ -81,21 +81,29 @@ export const DEFAULT_PRODUCTS: VideoItem[] = [];
 
 function filterForbiddenProducts(list: VideoItem[]): VideoItem[] {
   if (!Array.isArray(list)) return [];
-  return list.filter((p) => {
-    const cat = (p.category || '').toLowerCase();
-    const zone = (p.displayZone || '').toLowerCase();
-    if (
-      cat.includes('rabat') ||
-      cat.includes('meet up') ||
-      cat.includes('accessoire') ||
-      zone.includes('rabat') ||
-      zone.includes('meet up') ||
-      zone.includes('accessoire')
-    ) {
-      return false;
-    }
-    return true;
-  });
+  return list
+    .filter((p) => {
+      const cat = (p.category || '').toLowerCase();
+      const zone = (p.displayZone || '').toLowerCase();
+      if (
+        cat.includes('rabat') ||
+        cat.includes('meet up') ||
+        cat.includes('accessoire') ||
+        zone.includes('rabat') ||
+        zone.includes('meet up') ||
+        zone.includes('accessoire')
+      ) {
+        return false;
+      }
+      return true;
+    })
+    .map((p) => ({
+      ...p,
+      author: getCleanAuthor(p.author),
+      title: (p.title || '').replace(/biscotti(\s*boys)?/gi, 'TRICOMA LAANASSAR'),
+      description: (p.description || '').replace(/biscotti(\s*boys)?/gi, 'TRICOMA LAANASSAR'),
+      currency: 'EUR'
+    }));
 }
 
 // 1. PRODUCTS CENTRAL API

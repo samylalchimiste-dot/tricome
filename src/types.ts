@@ -30,6 +30,15 @@ export interface VideoItem {
   wholesalePrice?: number;
 }
 
+export function getCleanAuthor(author?: string): string {
+  if (!author) return 'TRICOMA LAANASSAR';
+  const clean = author.trim();
+  if (/biscotti|aliens|biscottiboy/i.test(clean)) {
+    return 'TRICOMA LAANASSAR';
+  }
+  return clean || 'TRICOMA LAANASSAR';
+}
+
 export interface CartItem {
   id: string;
   product: VideoItem;

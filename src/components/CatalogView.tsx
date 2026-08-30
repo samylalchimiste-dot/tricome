@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Heart, Sparkles, ChevronDown, ChevronRight, X } from 'lucide-react';
-import { VideoItem } from '../types';
+import { VideoItem, getCleanAuthor } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import ProductCardMedia from './ProductCardMedia';
+import ExtractionBadge from './ExtractionBadge';
 
 interface CatalogViewProps {
   products: VideoItem[];
@@ -272,11 +273,9 @@ export default function CatalogView({
                   <div className="relative aspect-square w-full bg-zinc-950 overflow-hidden">
                     <ProductCardMedia product={p} hoverScale={true} />
 
-                    {/* Badge */}
-                    <div className="absolute top-2 left-2 z-10">
-                      <span className="px-2 py-0.5 rounded-md bg-black/80 border border-amber-500/40 text-amber-300 text-[8px] font-mono uppercase font-black tracking-wider backdrop-blur-md shadow-sm">
-                        {p.badge || p.category || 'PREMIUM'}
-                      </span>
+                    {/* Extraction Badge on Top-Left */}
+                    <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
+                      <ExtractionBadge product={p} variant="media-overlay" />
                     </div>
 
                     {/* Favorite Toggle */}
@@ -294,9 +293,12 @@ export default function CatalogView({
 
                   {/* Details */}
                   <div className="p-3 space-y-2 bg-black/70 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1">
-                      <div className="text-[9px] font-mono font-bold text-amber-400/90 uppercase tracking-wider line-clamp-1">
-                        {p.category || 'TRICOMA'}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <ExtractionBadge product={p} variant="card-tag" />
+                        <span className="text-[8.5px] font-mono text-zinc-500 uppercase tracking-tight truncate max-w-[120px]">
+                          • {getCleanAuthor(p.author)}
+                        </span>
                       </div>
                       <h4 className="text-xs sm:text-sm font-bold text-white group-hover:text-amber-300 transition line-clamp-1 uppercase">
                         {p.title}

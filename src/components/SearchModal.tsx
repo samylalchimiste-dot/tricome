@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Search, X, Plus, Sparkles, Check } from 'lucide-react';
 import { VideoItem } from '../types';
 import ProductCardMedia from './ProductCardMedia';
+import ExtractionBadge from './ExtractionBadge';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface SearchModalProps {
@@ -119,13 +120,13 @@ export default function SearchModal({
                         <ProductCardMedia product={p} hoverScale={false} />
                       </div>
 
-                      <div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <ExtractionBadge product={p} variant="card-tag" />
+                        </div>
                         <h4 className="text-xs font-bold text-white group-hover:text-amber-400 transition uppercase">
                           {p.title}
                         </h4>
-                        <span className="text-[10px] font-mono text-neutral-400 block">
-                          {p.category || 'RESERVE'}
-                        </span>
                       </div>
                     </div>
 

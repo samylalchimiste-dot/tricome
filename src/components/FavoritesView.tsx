@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { Heart, Compass, Trash2 } from 'lucide-react';
 import { VideoItem } from '../types';
 import ProductCardMedia from './ProductCardMedia';
+import ExtractionBadge from './ExtractionBadge';
 
 interface FavoritesViewProps {
   products: VideoItem[];
@@ -76,6 +77,10 @@ export default function FavoritesView({
                 <div className="relative aspect-square w-full bg-neutral-950 overflow-hidden">
                   <ProductCardMedia product={p} hoverScale={true} />
 
+                  <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
+                    <ExtractionBadge product={p} variant="media-overlay" />
+                  </div>
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -90,6 +95,7 @@ export default function FavoritesView({
                 </div>
 
                 <div className="p-3 space-y-1.5 bg-black/80">
+                  <ExtractionBadge product={p} variant="card-tag" />
                   <h4 className="text-xs font-bold text-white line-clamp-1">{p.title}</h4>
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-mono font-extrabold text-orange-400">

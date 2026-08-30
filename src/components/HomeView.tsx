@@ -13,9 +13,10 @@ import {
   TrendingUp,
   Search
 } from 'lucide-react';
-import { VideoItem, BrandingSettings } from '../types';
+import { VideoItem, BrandingSettings, getCleanAuthor } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import ProductCardMedia from './ProductCardMedia';
+import ExtractionBadge from './ExtractionBadge';
 
 interface HomeViewProps {
   branding: BrandingSettings | null;
@@ -374,20 +375,22 @@ export default function HomeView({
                   {/* Top Overlay Badges */}
                   <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none z-10">
                     
-                    {/* Category / Stock Badge */}
+                    {/* Category / Extraction Badge */}
                     <div className="flex items-center gap-1">
+                      <ExtractionBadge product={product} variant="media-overlay" />
+
                       {isOutOfStock ? (
-                        <span className="px-2 py-0.5 rounded-md bg-red-600/90 backdrop-blur-md text-white font-mono text-[8px] sm:text-[9px] font-black uppercase border border-red-400">
+                        <span className="px-2 py-0.5 rounded-lg bg-red-600/95 backdrop-blur-md text-white font-mono text-[8px] sm:text-[9px] font-black uppercase border border-red-400 shadow">
                           ÉPUISÉ
                         </span>
-                      ) : product.badge ? (
-                        <span className="px-2 py-0.5 rounded-md bg-amber-500/90 backdrop-blur-md text-black font-mono text-[8px] sm:text-[9px] font-black uppercase border border-amber-300">
-                          {product.badge}
-                        </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-amber-300 font-mono text-[8px] sm:text-[9px] font-black uppercase border border-amber-500/30">
-                          {product.category || 'RÉSERVE'}
-                        </span>
+                        product.badge &&
+                        product.badge !== 'IN_STOCK' &&
+                        product.badge !== 'NONE' && (
+                          <span className="px-2 py-0.5 rounded-lg bg-black/80 backdrop-blur-md text-amber-300 font-mono text-[8px] sm:text-[9px] font-black uppercase border border-amber-400/40 shadow">
+                            {product.badge}
+                          </span>
+                        )
                       )}
                     </div>
 
@@ -418,7 +421,15 @@ export default function HomeView({
 
                 {/* Card Content Information */}
                 <div className="p-3 sm:p-4 flex flex-col justify-between flex-1 space-y-2">
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
+                    {/* Extraction Method Tag */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <ExtractionBadge product={product} variant="card-tag" />
+                      <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-tight truncate max-w-[140px]">
+                        • {getCleanAuthor(product.author)}
+                      </span>
+                    </div>
+
                     <h3 className="font-sans font-black text-xs sm:text-sm text-white line-clamp-1 group-hover:text-amber-300 transition">
                       {product.title}
                     </h3>

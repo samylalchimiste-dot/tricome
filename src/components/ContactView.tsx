@@ -15,7 +15,7 @@ export default function ContactView({ branding, triggerHaptic, showToast }: Cont
   const telegramChannel = branding?.telegramChannelUrl || 'https://t.me/+bMAog56A3AthODM0';
   const telegramSupport = branding?.telegramSupportUrl || 'https://t.me/yoru47';
   const telegramPrivate = 'https://t.me/Tricomaalanassar';
-  const instagram = branding?.instagramUrl || 'https://instagram.com/aliensfarms';
+  const instagram = branding?.instagramUrl || 'https://instagram.com/tricomaalanassar';
 
   const contacts = [
     {
@@ -62,7 +62,7 @@ export default function ContactView({ branding, triggerHaptic, showToast }: Cont
       title: 'Instagram Officiel',
       subtitle: 'Visuels haute définition, coulisses et présentations',
       handle: instagram,
-      displayHandle: '@aliensfarms',
+      displayHandle: '@tricomaalanassar',
       badge: 'COMMUNAUTÉ',
       badgeColor: 'bg-pink-500/10 border-pink-500/30 text-pink-400',
       icon: Instagram,

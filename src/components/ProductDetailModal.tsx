@@ -18,8 +18,9 @@ import {
   Check,
   Flame
 } from 'lucide-react';
-import { VideoItem, getPriceForSize, getSizeOptionsForCategory } from '../types';
+import { VideoItem, getPriceForSize, getSizeOptionsForCategory, getCleanAuthor } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
+import ExtractionBadge from './ExtractionBadge';
 
 interface ProductDetailModalProps {
   product: VideoItem;
@@ -258,15 +259,15 @@ export default function ProductDetailModal({
           <div className="space-y-4">
             
             {/* Header category badge */}
-            <div className="flex items-center justify-between gap-1.5">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span className="text-[10px] font-mono text-amber-300 tracking-wider uppercase font-bold">
-                  {product.category} • SÉLECTION PRIVÉE
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <ExtractionBadge product={product} variant="hero-pill" />
+                <span className="text-[10px] font-mono text-zinc-400 tracking-wider uppercase font-bold">
+                  • {getCleanAuthor(product.author)}
                 </span>
               </div>
               {isOutOfStock && (
-                <span className="px-2 py-0.5 rounded-md bg-red-600/90 text-white font-mono text-[9px] font-black uppercase">
+                <span className="px-2.5 py-1 rounded-md bg-red-600/90 text-white font-mono text-[9px] font-black uppercase shadow">
                   RUPTURE DE STOCK
                 </span>
               )}
