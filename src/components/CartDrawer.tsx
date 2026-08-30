@@ -19,7 +19,7 @@ import {
   User, 
   Truck, 
   Mail, 
-  CreditCard, 
+  MapPinned, 
   Copy, 
   Check, 
   Send,
@@ -29,7 +29,9 @@ import {
   Tag,
   Plus,
   Minus,
-  ArrowRight
+  ArrowRight,
+  ExternalLink,
+  MessageCircle
 } from 'lucide-react';
 import { CartItem, Order, getPriceForSize } from '../types';
 import { createOrder, validatePromoCode } from '../db';
@@ -73,7 +75,7 @@ export default function CartDrawer({
   const [zipCode, setZipCode] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [deliveryNotes, setDeliveryNotes] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<'crypto' | 'card'>('crypto');
+  const [paymentMethod, setPaymentMethod] = useState<'crypto' | 'disposition'>('crypto');
 
   // Promo code states
   const [promoCodeInput, setPromoCodeInput] = useState<string>('');
@@ -200,7 +202,7 @@ export default function CartDrawer({
       city: city.trim(),
       address: `${methodLabels[deliveryMethod] || 'Livraison'} : ${address.trim() || city.trim()} ${deliveryNotes ? `(${deliveryNotes})` : ''}`,
       zipCode: zipCode.trim() || '00000',
-      paymentMethod: paymentMethod === 'crypto' ? 'card' : paymentMethod === 'card' ? 'card' : 'cod',
+      paymentMethod: paymentMethod === 'crypto' ? 'card' : 'cod',
       items: cart.map(item => ({
         productId: item.product.id,
         title: item.product.title,
@@ -627,10 +629,10 @@ export default function CartDrawer({
                 </div>
               </div>
 
-              {/* Payment Method Selector */}
+              {/* Payment / Finalization Method Selector */}
               <div className="space-y-2">
                 <label className="text-[10px] font-mono uppercase text-zinc-400 tracking-wider font-bold block">
-                  3. MOYEN DE RÈGLEMENT :
+                  3. MODE DE RÈGLEMENT & FINALISATION :
                 </label>
 
                 <div className="grid grid-cols-2 gap-2">
@@ -655,18 +657,29 @@ export default function CartDrawer({
                     type="button"
                     onClick={() => {
                       triggerHaptic('light');
-                      setPaymentMethod('card');
+                      setPaymentMethod('disposition');
                     }}
                     className={`p-3 rounded-2xl border text-center flex flex-col items-center justify-center gap-1.5 transition cursor-pointer ${
-                      paymentMethod === 'card'
+                      paymentMethod === 'disposition'
                         ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.25)]'
                         : 'bg-zinc-900 border-white/10 text-zinc-400 hover:text-white'
                     }`}
                   >
-                    <CreditCard className="w-4 h-4 text-amber-400" />
-                    <span className="text-[10px] font-mono font-bold uppercase">Carte / Virement</span>
-                    <span className="text-[8px] font-mono text-zinc-400">Instantané & Sécurisé</span>
+                    <MapPinned className="w-4 h-4 text-amber-400" />
+                    <span className="text-[10px] font-mono font-bold uppercase">Mise à disposition</span>
+                    <span className="text-[8px] font-mono text-zinc-400">Règlement en direct</span>
                   </button>
+                </div>
+
+                {/* Notice that payments are finalized in private */}
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-2.5 text-left">
+                  <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="space-y-0.5 text-[9.5px] font-mono text-zinc-300 leading-tight">
+                    <p className="font-bold text-amber-300 uppercase">Paiement sécurisé en privé</p>
+                    <p className="text-zinc-400">
+                      Les règlements ne s'effectuent pas sur la mini-application. Après validation, vous serez directement redirigé vers le contact privé Telegram pour finaliser votre paiement en toute discrétion.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -694,11 +707,36 @@ export default function CartDrawer({
                 </p>
               </div>
 
+              {/* Private Payment Finalization Box */}
+              <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-left space-y-2 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+                <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase">
+                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>TRANSMISSION DIRECTE AUX 2 CONTACTS</span>
+                </div>
+                <p className="text-[10px] text-zinc-300 leading-relaxed font-sans">
+                  Votre commande a été <b>enregistrée et transmise simultanément aux deux administrateurs</b> (<span className="text-amber-300 font-mono">@Tricomaalanassar</span> & <span className="text-sky-300 font-mono">@yoru47</span>) pour validation et finalisation de votre règlement.
+                </p>
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-mono text-[9px] font-bold border border-amber-400/30">
+                    👤 @Tricomaalanassar
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-sky-400/20 text-sky-300 font-mono text-[9px] font-bold border border-sky-400/30">
+                    👤 @yoru47
+                  </span>
+                </div>
+              </div>
+
               {/* Summary Card */}
               <div className="p-4 rounded-2xl bg-zinc-900 border border-white/10 text-left space-y-2 text-xs">
                 <div className="flex justify-between border-b border-white/10 pb-2">
                   <span className="text-zinc-400">Client :</span>
                   <span className="font-bold text-white">{createdOrder.customerName}</span>
+                </div>
+                <div className="flex justify-between border-b border-white/10 pb-2">
+                  <span className="text-zinc-400">Mode choisi :</span>
+                  <span className="font-bold text-amber-300">
+                    {paymentMethod === 'crypto' ? 'Crypto (USDT/BTC)' : 'Mise à disposition'}
+                  </span>
                 </div>
                 <div className="flex justify-between border-b border-white/10 pb-2">
                   <span className="text-zinc-400">Destination :</span>
@@ -709,39 +747,45 @@ export default function CartDrawer({
                   <span className="font-black text-amber-300 text-sm">{createdOrder.totalAmount} €</span>
                 </div>
                 <div className="flex justify-between pt-1">
-                  <span className="text-zinc-400">Statut :</span>
-                  <span className="text-emerald-400 font-bold uppercase">En préparation (24h/48h)</span>
+                  <span className="text-zinc-400">Destinataires :</span>
+                  <span className="text-emerald-400 font-bold uppercase text-[10px]">Envoyé à @Tricoma & @Yoru</span>
                 </div>
               </div>
 
               <div className="space-y-2 pt-2">
                 <button
-                  onClick={handleCopyOrderSummary}
-                  className="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer"
-                >
-                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  <span>{copied ? 'Détails copiés !' : 'Copier le récapitulatif'}</span>
-                </button>
-
-                <a
-                  href="https://t.me/Tricomaalanassar"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:opacity-95 text-black font-black text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer block text-center shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                  type="button"
+                  onClick={() => {
+                    handleCopyOrderSummary();
+                    triggerHaptic('heavy');
+                    const orderText = encodeURIComponent(
+                      `🛍️ COMMANDE TRICOMA AL ANASSAR\n` +
+                      `Numéro: #${createdOrder.id}\n` +
+                      `Client: ${createdOrder.customerName}\n` +
+                      `Contact: ${createdOrder.phoneNumber || createdOrder.email}\n` +
+                      `Mode: ${paymentMethod === 'crypto' ? 'Crypto USDT/BTC' : 'Mise à disposition'}\n` +
+                      `Total: ${createdOrder.totalAmount}€\n\n` +
+                      `Bonjour, voici ma commande #${createdOrder.id} transmise pour finalisation du paiement.`
+                    );
+                    // Open both contacts seamlessly
+                    try {
+                      window.open(`https://t.me/yoru47?text=${orderText}`, '_blank');
+                    } catch (_) {}
+                    window.open(`https://t.me/Tricomaalanassar?text=${orderText}`, '_blank');
+                  }}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:opacity-95 text-black font-black text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-98"
                 >
                   <Send className="w-4 h-4" />
-                  <span>Envoyer au Contact Privé (@Tricomaalanassar)</span>
-                </a>
+                  <span>Finaliser avec @Tricomaalanassar & @yoru47</span>
+                </button>
 
-                <a
-                  href="https://t.me/yoru47"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer block text-center border border-white/10"
+                <button
+                  onClick={handleCopyOrderSummary}
+                  className="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer border border-white/10"
                 >
-                  <Send className="w-4 h-4 text-sky-400" />
-                  <span>Envoyer au Support Telegram (@yoru47)</span>
-                </a>
+                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-zinc-400" />}
+                  <span>{copied ? 'Détails copiés !' : 'Copier le récapitulatif'}</span>
+                </button>
               </div>
             </div>
           )}

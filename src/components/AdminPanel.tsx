@@ -2095,7 +2095,7 @@ export default function AdminPanel({
                         <div className="leading-relaxed">Adresse : <span className="text-[#f5efe9] font-sans">{o.address}</span></div>
                         <div>
                           Paiement : <span className="text-white">
-                            {o.paymentMethod === 'cod' ? '💵 Cash à la livraison' : o.paymentMethod === 'postal' ? '📮 Remboursement postal' : `🏦 Virement (${o.bankName})`}
+                            {o.paymentMethod === 'cod' ? '📍 Mise à disposition (Privé)' : o.paymentMethod === 'postal' ? '📮 Remboursement postal' : '💎 Crypto USDT / BTC (Privé)'}
                           </span>
                         </div>
                       </div>

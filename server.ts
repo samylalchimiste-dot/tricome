@@ -3619,6 +3619,61 @@ app.post('/api/orders', verifyUserOrAdminAuth, async (req, res) => {
 
   await saveOrderFirestore(entry);
 
+  // Automatic Instant Dispatch to BOTH contacts (@Tricomaalanassar and @yoru47) via Bot
+  try {
+    const token = getTelegramBotToken();
+    if (token) {
+      const itemsList = (entry.items || [])
+        .map((it: any) => `• <b>${it.quantity}x ${it.title}</b> (${it.size || 'Format standard'}) — ${it.price}€`)
+        .join('\n');
+      const payLabel = entry.paymentMethod === 'cod' ? '📍 Mise à disposition (Règlement direct)' : '💎 Crypto (USDT / BTC)';
+
+      const notifHtml = 
+        `🚨 <b>NOUVELLE COMMANDE REÇUE !</b> 🚨\n\n` +
+        `🆔 <b>Commande :</b> <code>#${entry.id}</code>\n` +
+        `👤 <b>Client :</b> ${entry.customerName || 'Anonyme'}\n` +
+        `📱 <b>Contact :</b> ${entry.phoneNumber || entry.email || (entry.telegramUsername ? '@' + entry.telegramUsername : 'Non renseigné')}\n` +
+        `📍 <b>Destination :</b> ${entry.address || entry.city || 'Non renseignée'}\n` +
+        `💳 <b>Mode de paiement :</b> ${payLabel}\n` +
+        `💰 <b>Total :</b> <b>${entry.totalAmount} €</b>\n\n` +
+        `📦 <b>Articles :</b>\n${itemsList || 'Voir détails complets sur l’application'}\n\n` +
+        `⚡ <i>Notification automatique envoyée simultanément à @Tricomaalanassar et @yoru47</i>`;
+
+      // Admin target Telegram IDs for Tricoma and Yoru / Owner
+      const adminChatIds = ['8989442900', '8464716562', '858781160'];
+      
+      // Also look up any other matching user IDs in database
+      try {
+        const allUsers = await loadUserProfilesFirestore();
+        for (const u of allUsers) {
+          const uName = (u.telegramUsername || '').toLowerCase();
+          if (uName === 'tricomaalanassar' || uName === 'yoru47' || uName === 'sultan_st212' || uName === 'samy_ghost') {
+            if (u.telegramId && !adminChatIds.includes(String(u.telegramId))) {
+              adminChatIds.push(String(u.telegramId));
+            }
+          }
+        }
+      } catch (_) {}
+
+      for (const chatId of adminChatIds) {
+        try {
+          fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: notifHtml,
+              parse_mode: 'HTML'
+            })
+          }).catch(() => {});
+        } catch (_) {}
+      }
+      console.log(`[ORDER DISPATCH] Automatically sent order #${entry.id} notification to ${adminChatIds.length} admins (including Tricoma & Yoru).`);
+    }
+  } catch (notifErr) {
+    console.error('[ORDER DISPATCH ERROR]', notifErr);
+  }
+
   // Auto-increment promotional discount usage on database if a valid promo code was used on checking out
   if (entry.appliedPromoCode) {
     try {

@@ -677,7 +677,7 @@ export default function VipSpace({
                               {order.totalAmount} €
                             </span>
                             <span className="text-[6.5px] font-mono text-zinc-500 uppercase tracking-widest mt-0.5">
-                              {order.paymentMethod === 'cod' ? 'Règlement Cache' : 'Crypto / Carte'}
+                              {order.paymentMethod === 'cod' ? 'Mise à disposition' : 'Crypto USDT/BTC'}
                             </span>
                           </div>
                         </div>

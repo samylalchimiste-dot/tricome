@@ -29,8 +29,8 @@ export default function InfoView({ triggerHaptic, onNavigateTab }: InfoViewProps
       a: 'Les commandes sont traitées et remises au transporteur sous 24h. Le délai moyen est de 24h à 48h selon votre localisation (France, Europe, etc.). Un numéro de suivi vous est transmis.'
     },
     {
-      q: 'Quels sont les moyens de paiement acceptés ?',
-      a: 'Nous acceptons exclusivement les règlements sécurisés par Cryptomonnaies (USDT, BTC) ainsi que par Carte Bancaire et Virement instantané. Aucun paiement à la livraison n\'est accepté afin de respecter strictement les protocoles de discrétion, d\'anonymat et de sécurité 0-Log.'
+      q: 'Quels sont les moyens de règlement et comment s\'effectue le paiement ?',
+      a: 'Les paiements ne sont pas traités directement sur la mini-application afin de garantir votre confidentialité 0-Log. Nous acceptons les Cryptomonnaies (USDT, BTC) ainsi que la Mise à disposition. Après validation du panier, vous êtes redirigé vers notre contact privé Telegram officiel pour finaliser le règlement en direct et en toute sécurité.'
     },
     {
       q: 'Quelle est la politique de conservation des données (0-Log) ?',
