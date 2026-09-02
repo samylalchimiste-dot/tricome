@@ -700,7 +700,7 @@ export default function CartDrawer({
 
               <div className="space-y-1">
                 <h3 className="text-lg font-black uppercase text-white">
-                  COMMANDE TRANSMIS AVEC SUCCÈS !
+                  COMMANDE VALIDÉE
                 </h3>
                 <p className="text-xs text-zinc-400">
                   Numéro de suivi : <span className="text-amber-300 font-bold">#{createdOrder.id}</span>
@@ -711,19 +711,11 @@ export default function CartDrawer({
               <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-400/40 text-left space-y-2 shadow-[0_0_20px_rgba(245,158,11,0.15)]">
                 <div className="flex items-center gap-2 text-amber-300 font-bold text-xs uppercase">
                   <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>TRANSMISSION DIRECTE AUX 2 CONTACTS</span>
+                  <span>RÈGLEMENT & FINALISATION EN PRIVÉ</span>
                 </div>
                 <p className="text-[10px] text-zinc-300 leading-relaxed font-sans">
-                  Votre commande a été <b>enregistrée et transmise simultanément aux deux administrateurs</b> (<span className="text-amber-300 font-mono">@Tricomaalanassar</span> & <span className="text-sky-300 font-mono">@yoru47</span>) pour validation et finalisation de votre règlement.
+                  Pour garantir votre discrétion 0-Log, les paiements s'effectuent exclusivement en privé. Cliquez ci-dessous pour transmettre votre commande et régler avec nos contacts officiels.
                 </p>
-                <div className="flex items-center gap-2 pt-1">
-                  <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-mono text-[9px] font-bold border border-amber-400/30">
-                    👤 @Tricomaalanassar
-                  </span>
-                  <span className="px-2 py-0.5 rounded-full bg-sky-400/20 text-sky-300 font-mono text-[9px] font-bold border border-sky-400/30">
-                    👤 @yoru47
-                  </span>
-                </div>
               </div>
 
               {/* Summary Card */}
@@ -742,13 +734,9 @@ export default function CartDrawer({
                   <span className="text-zinc-400">Destination :</span>
                   <span className="font-bold text-white truncate max-w-[200px]">{createdOrder.city}</span>
                 </div>
-                <div className="flex justify-between border-b border-white/10 pb-2">
+                <div className="flex justify-between pt-1">
                   <span className="text-zinc-400">Total :</span>
                   <span className="font-black text-amber-300 text-sm">{createdOrder.totalAmount} €</span>
-                </div>
-                <div className="flex justify-between pt-1">
-                  <span className="text-zinc-400">Destinataires :</span>
-                  <span className="text-emerald-400 font-bold uppercase text-[10px]">Envoyé à @Tricoma & @Yoru</span>
                 </div>
               </div>
 
@@ -767,7 +755,6 @@ export default function CartDrawer({
                       `Total: ${createdOrder.totalAmount}€\n\n` +
                       `Bonjour, voici ma commande #${createdOrder.id} transmise pour finalisation du paiement.`
                     );
-                    // Open both contacts seamlessly
                     try {
                       window.open(`https://t.me/yoru47?text=${orderText}`, '_blank');
                     } catch (_) {}
@@ -776,7 +763,7 @@ export default function CartDrawer({
                   className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:opacity-95 text-black font-black text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-98"
                 >
                   <Send className="w-4 h-4" />
-                  <span>Finaliser avec @Tricomaalanassar & @yoru47</span>
+                  <span>Finaliser avec les contacts officiels</span>
                 </button>
 
                 <button

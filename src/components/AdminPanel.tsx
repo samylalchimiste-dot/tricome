@@ -2774,7 +2774,7 @@ export default function AdminPanel({
                         type="text"
                         value={settings.telegramChannelUrl || ''}
                         onChange={(e) => setBrandingSettings({ ...settings, telegramChannelUrl: e.target.value })}
-                        placeholder="Ex: https://t.me/+ox8xo-KqAk1jYjI0"
+                        placeholder="Ex: https://t.me/+bMAog56A3AthODM0"
                         className="w-full text-[9px] py-1.5 px-2.5 rounded bg-black border border-[#222] focus:border-[#D4AF37] text-white outline-none font-mono"
                       />
                     </div>
