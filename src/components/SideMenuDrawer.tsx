@@ -154,15 +154,15 @@ export default function SideMenuDrawer({
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/20 via-black to-yellow-500/20 flex items-center justify-center font-mono font-black text-amber-300 text-sm shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                    TA
+                    ST
                   </div>
                   <div>
                     <h3 className="font-sans text-sm font-black tracking-wider text-white uppercase flex items-center gap-1">
-                      TRICOMA
+                      SHELF
                       <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                     </h3>
                     <span className="text-[8px] font-mono tracking-widest text-amber-300/80 uppercase font-bold block">
-                      AL ANASSAR • RÉSERVE
+                      TERPS • RÉSERVE
                     </span>
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export default function SideMenuDrawer({
             <div className="pt-6 border-t border-white/10 text-center space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-widest">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                <span>TRICOMA AL ANASSAR — LIVE</span>
+                <span>SHELF TERPS — LIVE</span>
               </div>
               <p className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest">
                 0-LOG SECURE TELEGRAM APP

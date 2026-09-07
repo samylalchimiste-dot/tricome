@@ -13,47 +13,33 @@ export default function ContactView({ branding, triggerHaptic, showToast }: Cont
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
 
   const telegramChannel = branding?.telegramChannelUrl || 'https://t.me/+bMAog56A3AthODM0';
-  const telegramSupport = branding?.telegramSupportUrl || 'https://t.me/yoru47';
-  const telegramPrivate = 'https://t.me/Tricomaalanassar';
-  const instagram = branding?.instagramUrl || 'https://instagram.com/tricomaalanassar';
+  const telegramSupport = branding?.telegramSupportUrl || 'https://t.me/yory47';
+  const instagram = branding?.instagramUrl || 'https://instagram.com/north47_lab';
 
   const contacts = [
     {
-      id: 'tg-private',
-      title: 'Contact Privé Telegram',
-      subtitle: 'Liaison directe & commandes exclusives',
-      handle: telegramPrivate,
-      displayHandle: '@Tricomaalanassar (Privé)',
-      badge: 'DIRECT 🟢',
+      id: 'tg-support',
+      title: 'Contact & Support Telegram (Unique)',
+      subtitle: 'Liaison directe exclusive, conseils, commandes et assistance 24/7',
+      handle: telegramSupport,
+      displayHandle: '@yory47',
+      badge: 'OFFICIEL 🟢',
       badgeColor: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
       icon: Send,
       color: 'from-amber-950/40 via-zinc-900 to-black border-amber-500/30 hover:border-amber-400',
-      btnText: 'Ouvrir le Contact Privé',
+      btnText: 'Ouvrir le Contact (@yory47)',
       btnClass: 'bg-gradient-to-r from-amber-400 to-yellow-500 hover:opacity-95 text-black font-black',
-    },
-    {
-      id: 'tg-support',
-      title: 'Support Direct Telegram (24/7)',
-      subtitle: 'Assistance personnalisée, suivi des colis et conseils commandes',
-      handle: telegramSupport,
-      displayHandle: '@yoru47 (Support)',
-      badge: 'EN LIGNE 🟢',
-      badgeColor: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
-      icon: Headphones,
-      color: 'from-emerald-950/40 via-zinc-900 to-black border-emerald-500/30 hover:border-emerald-400',
-      btnText: 'Ouvrir le Support Direct',
-      btnClass: 'bg-zinc-800 hover:bg-zinc-700 text-white font-bold',
     },
     {
       id: 'tg-channel',
       title: 'Canal Officiel Telegram',
       subtitle: 'Arrivages exclusifs, menus en direct et drops réservés',
       handle: telegramChannel,
-      displayHandle: 'Canal Officiel TRICOMA',
-      badge: 'OFFICIEL',
-      badgeColor: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
+      displayHandle: 'Canal Officiel SHELF TERPS',
+      badge: 'CANAL OFFICIEL',
+      badgeColor: 'bg-zinc-700/30 border-zinc-600/30 text-zinc-300',
       icon: Send,
-      color: 'from-amber-950/40 via-zinc-900 to-black border-amber-500/30 hover:border-amber-400',
+      color: 'from-zinc-900 via-zinc-900 to-black border-zinc-700/40 hover:border-zinc-500',
       btnText: 'Rejoindre le Canal',
       btnClass: 'bg-zinc-800 hover:bg-zinc-700 text-white font-bold',
     },
@@ -62,7 +48,7 @@ export default function ContactView({ branding, triggerHaptic, showToast }: Cont
       title: 'Instagram Officiel',
       subtitle: 'Visuels haute définition, coulisses et présentations',
       handle: instagram,
-      displayHandle: '@tricomaalanassar',
+      displayHandle: '@north47_lab',
       badge: 'COMMUNAUTÉ',
       badgeColor: 'bg-pink-500/10 border-pink-500/30 text-pink-400',
       icon: Instagram,

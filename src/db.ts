@@ -100,8 +100,8 @@ function filterForbiddenProducts(list: VideoItem[]): VideoItem[] {
     .map((p) => ({
       ...p,
       author: getCleanAuthor(p.author),
-      title: (p.title || '').replace(/biscotti(\s*boys)?/gi, 'TRICOMA LAANASSAR'),
-      description: (p.description || '').replace(/biscotti(\s*boys)?/gi, 'TRICOMA LAANASSAR'),
+      title: (p.title || '').replace(/biscotti(\s*boys)?|tricoma(\s*laanassar)?/gi, 'SHELF TERPS'),
+      description: (p.description || '').replace(/biscotti(\s*boys)?|tricoma(\s*laanassar)?/gi, 'SHELF TERPS'),
       currency: 'EUR'
     }));
 }
@@ -426,7 +426,7 @@ export async function getBrandingSettings(): Promise<BrandingSettings> {
       launchScreenUrl: '',
       homepageHeroBgUrl: '',
       logoUrl: '',
-      introStatusLine: '🌿💎 TRICOMA AL ANASSAR 💎🌿 — RÉSERVE PRIVÉE',
+      introStatusLine: '🌿💎 SHELF TERPS 💎🌿 — RÉSERVE PRIVÉE',
       sectionTitles: defaultTitles
     };
   }

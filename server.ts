@@ -1,5 +1,5 @@
 /**
- * TRICOMA AL ANASSAR - Production Server Engine v2.0
+ * SHELF TERPS - Production Server Engine v2.0
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -28,8 +28,11 @@ if (isProductionRunner && process.env.NODE_ENV !== 'production') {
 }
 
 // Environment variable configuration for Telegram Bot
-const OFFICIAL_TELEGRAM_BOT_TOKEN = '8665081769:AAFaP8WIAMj0RNFZszxhgYCUgHGIgmENtM8';
+const OFFICIAL_TELEGRAM_BOT_TOKEN = '8667387039:AAEsJV5UCIIqQnpsxGMGLlKbyvc0xuOZGW0';
+let isMenuButtonMethodFrozen = false;
 if (!process.env.TELEGRAM_BOT_TOKEN || 
+    process.env.TELEGRAM_BOT_TOKEN.includes('8969801090') ||
+    process.env.TELEGRAM_BOT_TOKEN.includes('8665081769') ||
     process.env.TELEGRAM_BOT_TOKEN.includes('8761666672') ||
     process.env.TELEGRAM_BOT_TOKEN.includes('8801492890') ||
     process.env.TELEGRAM_BOT_TOKEN.includes('8768845552') ||
@@ -53,6 +56,8 @@ if (!process.env.TELEGRAM_BOT_TOKEN ||
 function getTelegramBotToken(): string {
   const token = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
   if (!token || 
+      token.includes('8969801090') ||
+      token.includes('8665081769') ||
       token.includes('8761666672') ||
       token.includes('8801492890') ||
       token.includes('8768845552') ||
@@ -1582,13 +1587,13 @@ const DEFAULT_PRODUCTS: any[] = [];
 
 // Default application visual branding customizations
 const DEFAULT_SETTINGS = {
-  introBgUrl: '/tricoma_logo.png',
-  launchScreenUrl: '/tricoma_logo.png',
-  homepageHeroBgUrl: '/tricoma_logo.png',
-  logoUrl: '/tricoma_logo.png',
+  introBgUrl: '/shelf_terps_bot_avatar.jpg',
+  launchScreenUrl: '/shelf_terps_bot_avatar.jpg',
+  homepageHeroBgUrl: '/shelf_terps_bot_avatar.jpg',
+  logoUrl: '/shelf_terps_bot_avatar.jpg',
   telegramChannelUrl: 'https://t.me/+bMAog56A3AthODM0',
-  telegramSupportUrl: 'https://t.me/yoru47',
-  introStatusLine: 'TRICOMA AL ANASSAR — RÉSERVE PRIVÉE',
+  telegramSupportUrl: 'https://t.me/yory47',
+  introStatusLine: 'SHELF TERPS — RÉSERVE PRIVÉE',
   sectionTitles: [
     { id: '1', text: 'LA RÉSERVE PRIVÉE', category: 'All', size: 'L', color: '#D4AF37', enabled: true, order: 1 },
     { id: '2', text: 'SELECTION DRY SIFT', category: 'DRY SIFT', size: 'L', color: '#D4AF37', enabled: true, order: 2 },
@@ -1644,17 +1649,17 @@ function saveSettingsToDisk(data: any) {
 function sanitizeProductData(p: any): any {
   if (!p || typeof p !== 'object') return p;
   let author = (p.author || '').trim();
-  if (!author || /biscotti|aliens|biscottiboy/i.test(author)) {
-    author = 'TRICOMA LAANASSAR';
+  if (!author || /biscotti|aliens|biscottiboy|tricoma/i.test(author)) {
+    author = 'SHELF TERPS';
   }
-  let title = (p.title || '').replace(/biscotti(\s*boys)?/gi, 'TRICOMA LAANASSAR').trim();
-  let desc = (p.description || '').replace(/biscotti(\s*boys)?/gi, 'TRICOMA LAANASSAR').trim();
-  let category = (p.category || 'STATIC').replace(/biscotti(\s*boys)?/gi, 'TRICOMA LAANASSAR').trim();
+  let title = (p.title || '').replace(/biscotti(\s*boys)?|tricoma(\s*laanassar)?/gi, 'SHELF TERPS').trim();
+  let desc = (p.description || '').replace(/biscotti(\s*boys)?|tricoma(\s*laanassar)?/gi, 'SHELF TERPS').trim();
+  let category = (p.category || 'STATIC').replace(/biscotti(\s*boys)?|tricoma(\s*laanassar)?/gi, 'SHELF TERPS').trim();
 
   return {
     ...p,
-    author: author || 'TRICOMA LAANASSAR',
-    title: title || 'TRICOMA SÉLECTION',
+    author: author || 'SHELF TERPS',
+    title: title || 'SHELF TERPS SÉLECTION',
     description: desc,
     category: category || 'STATIC',
     currency: 'EUR',
@@ -2775,9 +2780,10 @@ async function syncLocalToFirestoreIfNeeded() {
           data.introStatusLine.includes('pyjama') || 
           data.introStatusLine.includes('ALIENS') ||
           data.introStatusLine.includes('BISCOTTI') ||
-          data.introStatusLine.includes('DRYTECH')
+          data.introStatusLine.includes('DRYTECH') ||
+          data.introStatusLine.includes('TRICOMA')
         ) {
-          data.introStatusLine = 'TRICOMA AL ANASSAR — RÉSERVE PRIVÉE';
+          data.introStatusLine = 'SHELF TERPS — RÉSERVE PRIVÉE';
           needsUpdate = true;
         }
 
@@ -2828,7 +2834,7 @@ async function syncLocalToFirestoreIfNeeded() {
           homepageHeroBgUrl: '/tricoma_logo.png',
           logoUrl: '/tricoma_logo.png',
           adminPassword: 'omerta2026',
-          introStatusLine: 'TRICOMA AL ANASSAR — RÉSERVE PRIVÉE',
+          introStatusLine: 'SHELF TERPS — RÉSERVE PRIVÉE',
           sectionTitles: [
             { id: '1', text: 'LA RÉSERVE PRIVÉE', category: 'All', size: 'L', color: '#D4AF37', enabled: true, order: 1 },
             { id: '2', text: 'SELECTION LA MOUSSE', category: 'LA MOUSSE', size: 'L', color: '#D4AF37', enabled: true, order: 2 },
@@ -3822,7 +3828,7 @@ app.get('/api/reviews', async (req, res) => {
 app.post('/api/reviews', verifyUserOrAdminAuth, async (req, res) => {
   const { telegramId, telegramUsername, rating, comment, category } = req.body;
   if (!comment || !rating || (!telegramId && !telegramUsername)) {
-    return res.status(400).json({ error: 'Champs d\'avis manquants' });
+    return res.json({ success: false, error: 'Champs d\'avis manquants' });
   }
 
   // Verification check: User MUST have at least 1 completed order
@@ -3916,8 +3922,8 @@ app.delete('/api/promo-codes/:id', verifyAdminAuth, async (req, res) => {
 
 app.post('/api/promo-codes/validate', verifyUserOrAdminAuth, async (req, res) => {
   const { code, cartTotal, telegramId } = req.body;
-  if (!code) {
-    return res.status(400).json({ valid: false, error: 'Veuillez saisir un code promo' });
+  if (!code || typeof code !== 'string' || !code.trim()) {
+    return res.json({ valid: false, error: 'Veuillez saisir un code promo' });
   }
 
   const cleanCode = code.trim().toUpperCase();
@@ -4022,7 +4028,7 @@ app.post('/api/settings', verifyAdminAuth, async (req, res) => {
   try {
     const activeUrl = getTelegramAppUrl();
     const token = getTelegramBotToken();
-    if (token && activeUrl) {
+    if (token && activeUrl && !isMenuButtonMethodFrozen) {
       console.log('[SETTINGS UPDATE] Re-syncing Telegram bot menu button with URL:', activeUrl);
       fetch(`https://api.telegram.org/bot${token}/setChatMenuButton`, {
         method: 'POST',
@@ -4034,6 +4040,11 @@ app.post('/api/settings', verifyAdminAuth, async (req, res) => {
             web_app: { url: activeUrl }
           }
         })
+      }).then(async r => {
+        const resData = await r.json().catch(() => null) as any;
+        if (resData?.error_code === 400 && String(resData?.description).includes('FROZEN_METHOD')) {
+          isMenuButtonMethodFrozen = true;
+        }
       }).catch(e => console.warn('[TELEGRAM SYNC ERR]:', e));
     }
   } catch (syncErr) {
@@ -4261,7 +4272,7 @@ app.post('/api/pending-approvals/approve', verifyAdminAuth, async (req, res) => 
     if (token) {
       try {
         const appUrl = getTelegramAppUrl();
-        const approvalMsg = `💎 *Félicitations\\! Votre accès VIP à TRICOMA AL ANASSAR a été activé\\!*\n\nVous pouvez dès à présent ouvrir le Shop et découvrir notre catalogue exclusif\\.`;
+        const approvalMsg = `💎 *Félicitations\\! Votre accès VIP à SHELF TERPS a été activé\\!*\n\nVous pouvez dès à présent ouvrir le Shop et découvrir notre catalogue exclusif\\.`;
         
         const payload = {
           chat_id: telegramId,
@@ -4308,7 +4319,7 @@ app.post('/api/pending-approvals/reject', verifyAdminAuth, async (req, res) => {
     const token = getTelegramBotToken();
     if (token && telegramId) {
       try {
-        const rejectMsg = `❌ *Accès refusé*\n\nVotre demande d'accès pour la Mini\\-App TRICOMA AL ANASSAR n'a pas été validée par l'administration\\.`;
+        const rejectMsg = `❌ *Accès refusé*\n\nVotre demande d'accès pour la Mini\\-App SHELF TERPS n'a pas été validée par l'administration\\.`;
         await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -4902,13 +4913,13 @@ async function sendInstagramPromoMessage(chatId: string | number): Promise<{ suc
     return { success: false };
   }
   
-  const defaultText = `💎 TRICOMA AL ANASSAR — RÉSERVE PRIVÉE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📲 CANAUX OFFICIELS & CONTACT :\n📢 Canal Telegram : https://t.me/+bMAog56A3AthODM0\n👤 Contact Privé : @Tricomaalanassar\n💬 Support : @yoru47\n\n🛍️ COMMENT COMMANDER ?\nCliquez ci-dessous sur « 🛒 Accéder au Shop » pour découvrir le menu et passer commande.\n\nTRICOMA AL ANASSAR — Pure Excellence ✨`;
+  const defaultText = `💎 SHELF TERPS — RÉSERVE PRIVÉE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📲 CANAUX OFFICIELS & CONTACT :\n📢 Canal Telegram : https://t.me/+bMAog56A3AthODM0\n💬 Contact Unique : @yory47\n\n🛍️ COMMENT COMMANDER ?\nCliquez ci-dessous sur « 🛒 Accéder au Shop » pour découvrir le menu et passer commande.\n\nSHELF TERPS — Pure Excellence ✨`;
   let promoMessage = defaultText;
   let promoBtnLabel = "🛒 Accéder au Shop 🛍️";
   let promoUrl1 = "";
   let promoBtnLabel2 = "";
   let promoUrl2 = "";
-  let promoImageUrl = "/tricoma_logo.png";
+  let promoImageUrl = "/shelf_terps_bot_avatar.jpg";
 
   try {
     const freshSettings = loadSettingsFromDisk();
@@ -5175,21 +5186,28 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
           console.warn('[TELEGRAM BOT] Failed to load logo settings.', settingsErr);
         }
 
-        const welcomeText = `💎 TRICOMA AL ANASSAR — RÉSERVE PRIVÉE OFFICIELLE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📢 Canal Officiel : ${channelLink}\n👤 Contact Privé : @Tricomaalanassar\n💬 Support : @yoru47\n\n👉 Cliquez ci-dessous sur « 🛒 Accéder au Shop » pour ouvrir le shop directement.`;
+        const welcomeText = `💎 SHELF TERPS — RÉSERVE PRIVÉE OFFICIELLE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📢 Canal Officiel : ${channelLink}\n💬 Contact & Support : @yory47\n\n👉 Cliquez ci-dessous sur « 🛒 Accéder au Shop » pour ouvrir le shop directement.`;
 
         // Configure user's personal chat menu button directly to active appUrl
-        fetch(`https://api.telegram.org/bot${token}/setChatMenuButton`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: Number(chatId),
-            menu_button: {
-              type: 'web_app',
-              text: '🛍️ TRICOMA',
-              web_app: { url: appUrl }
+        if (!isMenuButtonMethodFrozen) {
+          fetch(`https://api.telegram.org/bot${token}/setChatMenuButton`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: Number(chatId),
+              menu_button: {
+                type: 'web_app',
+                text: '🛍️ SHELF TERPS',
+                web_app: { url: appUrl }
+              }
+            })
+          }).then(async r => {
+            const resData = await r.json().catch(() => null) as any;
+            if (resData?.error_code === 400 && String(resData?.description).includes('FROZEN_METHOD')) {
+              isMenuButtonMethodFrozen = true;
             }
-          })
-        }).catch(e => console.warn('[TELEGRAM BOT] Failed to setChatMenuButton for user:', chatId, e));
+          }).catch(e => console.warn('[TELEGRAM BOT] Failed to setChatMenuButton for user:', chatId, e));
+        }
 
         const inlineKeyboard = [
           [
@@ -5204,14 +5222,8 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
               url: channelLink
             },
             {
-              text: "👤 Contact Privé",
-              url: "https://t.me/Tricomaalanassar"
-            }
-          ],
-          [
-            {
-              text: "💬 Support (@yoru47)",
-              url: "https://t.me/yoru47"
+              text: "💬 Contact (@yory47)",
+              url: "https://t.me/yory47"
             }
           ]
         ];
@@ -5221,8 +5233,11 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
 
         // 1. Try sending local bot emblem photo via multipart FormData directly to Telegram
         const candidateLogoPaths = [
+          path.join(process.cwd(), 'public', 'shelf_terps_bot_avatar.jpg'),
+          path.join(process.cwd(), 'public', 'shelf_terps_logo.jpg'),
           path.join(process.cwd(), 'public', 'bot_welcome_tricoma.jpg'),
           path.join(process.cwd(), 'public', 'tricoma_bot_welcome.jpg'),
+          path.join(process.cwd(), 'public', 'bot_shelfterps_logo.jpg'),
           path.join(process.cwd(), 'public', 'tricoma_logo.png'),
           path.join(process.cwd(), 'public', 'tricoma_logo.jpg'),
           path.join(process.cwd(), 'public', 'tricoma_hero.jpg'),
@@ -5367,11 +5382,18 @@ async function startTelegramLongPolling() {
 
       if (!res.ok) {
         if (res.status === 409) {
-          console.warn('[TELEGRAM POLLING] Conflict 409 (another webhook or polling instance active). Retrying in 5s...');
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          // Another instance is already polling (e.g. deployed container on Railway)
+          // Use longer backoff to avoid conflict loops and rate limiting
+          await new Promise(resolve => setTimeout(resolve, 15000));
           continue;
         }
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        if (res.status === 400) {
+          const errData = await res.json().catch(() => null) as any;
+          console.warn('[TELEGRAM POLLING] 400 Bad Request on getUpdates:', errData?.description || 'Bad Request');
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          continue;
+        }
+        await new Promise(resolve => setTimeout(resolve, 3000));
         continue;
       }
 
@@ -5386,8 +5408,10 @@ async function startTelegramLongPolling() {
           await processTelegramUpdate(update, 'polling');
         }
       } else if (data && data.error_code === 409) {
-        console.warn('[TELEGRAM POLLING] Conflict 409 (another polling instance active). Retrying in 5s...');
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 15000));
+      } else if (data && data.error_code === 400) {
+        console.warn('[TELEGRAM POLLING] 400 error_code from getUpdates:', data.description);
+        await new Promise(resolve => setTimeout(resolve, 10000));
       } else {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
@@ -5776,53 +5800,62 @@ async function setupTelegramWebhook() {
   const appUrl = getTelegramAppUrl();
   
   try {
-    console.log(`[TELEGRAM] Setting Chat Menu Button web_app URL to: ${appUrl}`);
-    const menuResponse = await fetch(`https://api.telegram.org/bot${token}/setChatMenuButton`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        menu_button: {
-          type: 'web_app',
-          text: '🛍️ TRICOMA',
-          web_app: {
-            url: appUrl
+    if (!isMenuButtonMethodFrozen) {
+      console.log(`[TELEGRAM] Setting Chat Menu Button web_app URL to: ${appUrl}`);
+      const menuResponse = await fetch(`https://api.telegram.org/bot${token}/setChatMenuButton`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          menu_button: {
+            type: 'web_app',
+            text: '🛍️ SHELF TERPS',
+            web_app: {
+              url: appUrl
+            }
           }
+        })
+      });
+      const menuResult = await menuResponse.json().catch(() => null) as any;
+      if (menuResult && menuResult.ok) {
+        console.log('[TELEGRAM] Chat Menu Button successfully configured.');
+      } else {
+        if (menuResult?.error_code === 400 && String(menuResult?.description).includes('FROZEN_METHOD')) {
+          isMenuButtonMethodFrozen = true;
+          console.log('[TELEGRAM] Chat Menu Button API method is frozen on Telegram bot token. Inline shop buttons will serve access.');
+        } else {
+          console.log('[TELEGRAM] Chat Menu Button notice:', menuResult?.description || menuResult);
         }
-      })
-    });
-    const menuResult = await menuResponse.json() as any;
-    if (menuResult && menuResult.ok) {
-      console.log('[TELEGRAM] Chat Menu Button successfully configured.');
-    } else {
-      console.warn('[TELEGRAM] Chat Menu Button configuration response:', menuResult);
+      }
+
+      // Set Bot Name
+      if (!isMenuButtonMethodFrozen) {
+        fetch(`https://api.telegram.org/bot${token}/setMyName`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: 'SHELF TERPS' })
+        }).catch(() => {});
+
+        // Set Bot Description (French)
+        fetch(`https://api.telegram.org/bot${token}/setMyDescription`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            description: "💎 SHELF TERPS — Réserve Privée Officielle 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif."
+          })
+        }).catch(() => {});
+
+        // Set Bot Short Description (French)
+        fetch(`https://api.telegram.org/bot${token}/setMyShortDescription`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            short_description: "SHELF TERPS — Réserve Privée Officielle. Fleurs & Extractions d'exception."
+          })
+        }).catch(() => {});
+      }
     }
-
-    // Set Bot Name
-    fetch(`https://api.telegram.org/bot${token}/setMyName`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: 'TRICOMA AL ANASSAR' })
-    }).catch(e => console.warn('[TELEGRAM] setMyName error:', e));
-
-    // Set Bot Description (French)
-    fetch(`https://api.telegram.org/bot${token}/setMyDescription`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        description: "💎 TRICOMA AL ANASSAR — Réserve Privée Officielle 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif."
-      })
-    }).catch(e => console.warn('[TELEGRAM] setMyDescription error:', e));
-
-    // Set Bot Short Description (French)
-    fetch(`https://api.telegram.org/bot${token}/setMyShortDescription`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        short_description: "TRICOMA AL ANASSAR — Réserve Privée Officielle. Fleurs & Extractions d'exception."
-      })
-    }).catch(e => console.warn('[TELEGRAM] setMyShortDescription error:', e));
   } catch (err) {
-    console.warn('[TELEGRAM] Error during webhook/bot setup:', err);
+    console.log('[TELEGRAM] Non-fatal notification during webhook/bot setup:', (err as any)?.message || err);
   }
 }
 

@@ -98,12 +98,12 @@ export default function CartDrawer({
         setCustomerName(nameVal);
         setEmailAddress(user.username ? `@${user.username}` : `client_${user.id}@telegram.org`);
       } else {
-        setCustomerName('Client TRICOMA');
-        setEmailAddress('client@tricoma.vip');
+        setCustomerName('Client SHELF TERPS');
+        setEmailAddress('client@shelfterps.vip');
       }
     } catch {
-      setCustomerName('Client TRICOMA');
-      setEmailAddress('client@tricoma.vip');
+      setCustomerName('Client SHELF TERPS');
+      setEmailAddress('client@shelfterps.vip');
     }
   }, []);
 
@@ -194,7 +194,7 @@ export default function CartDrawer({
     };
 
     const newOrder: Order = {
-      id: `TRICOMA-${Date.now().toString().slice(-6)}`,
+      id: `SHELF-${Date.now().toString().slice(-6)}`,
       customerName: customerName.trim(),
       email: emailAddress.trim(),
       phoneNumber: phoneNumber.trim() || 'Non renseigné',
@@ -241,7 +241,7 @@ export default function CartDrawer({
     if (!createdOrder) return;
     triggerHaptic('light');
     const itemsList = createdOrder.items.map(i => `• ${i.title} (${i.selectedSize}) x${i.quantity} = ${i.price}€`).join('\n');
-    const text = `🛍️ COMMANDE TRICOMA AL ANASSAR\nID: #${createdOrder.id}\nClient: ${createdOrder.customerName}\nContact: ${createdOrder.phoneNumber || createdOrder.email}\nLivraison: ${createdOrder.address}\n\nArticles:\n${itemsList}\n\nTotal: ${createdOrder.totalAmount}€\nStatut: En attente de validation`;
+    const text = `🛍️ COMMANDE SHELF TERPS\nID: #${createdOrder.id}\nClient: ${createdOrder.customerName}\nContact: ${createdOrder.phoneNumber || createdOrder.email}\nLivraison: ${createdOrder.address}\n\nArticles:\n${itemsList}\n\nTotal: ${createdOrder.totalAmount}€\nStatut: En attente de validation`;
     
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -298,7 +298,7 @@ export default function CartDrawer({
                 <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
               </h2>
               <span className="text-[10px] font-mono text-zinc-400">
-                TRICOMA AL ANASSAR • RÉSERVE PRIVÉE
+                SHELF TERPS • RÉSERVE PRIVÉE
               </span>
             </div>
           </div>
@@ -420,7 +420,7 @@ export default function CartDrawer({
                           type="text"
                           value={promoCodeInput}
                           onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
-                          placeholder="EX: VIP2026, TRICOMA10..."
+                          placeholder="EX: VIP2026, SHELF10..."
                           className="flex-1 px-3 py-2 rounded-xl bg-black border border-white/15 text-white font-mono text-xs focus:outline-none focus:border-amber-400 placeholder:text-zinc-600 uppercase"
                         />
                         <button
@@ -747,7 +747,7 @@ export default function CartDrawer({
                     handleCopyOrderSummary();
                     triggerHaptic('heavy');
                     const orderText = encodeURIComponent(
-                      `🛍️ COMMANDE TRICOMA AL ANASSAR\n` +
+                      `🛍️ COMMANDE SHELF TERPS\n` +
                       `Numéro: #${createdOrder.id}\n` +
                       `Client: ${createdOrder.customerName}\n` +
                       `Contact: ${createdOrder.phoneNumber || createdOrder.email}\n` +
@@ -756,14 +756,13 @@ export default function CartDrawer({
                       `Bonjour, voici ma commande #${createdOrder.id} transmise pour finalisation du paiement.`
                     );
                     try {
-                      window.open(`https://t.me/yoru47?text=${orderText}`, '_blank');
+                      window.open(`https://t.me/yory47?text=${orderText}`, '_blank');
                     } catch (_) {}
-                    window.open(`https://t.me/Tricomaalanassar?text=${orderText}`, '_blank');
                   }}
                   className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 hover:opacity-95 text-black font-black text-xs uppercase flex items-center justify-center gap-2 transition cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.4)] active:scale-98"
                 >
                   <Send className="w-4 h-4" />
-                  <span>Finaliser avec les contacts officiels</span>
+                  <span>Finaliser avec @yory47</span>
                 </button>
 
                 <button

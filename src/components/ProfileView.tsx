@@ -138,7 +138,7 @@ export default function ProfileView({
 
       {/* 2. DIRECT SUPPORT ACTION BUTTON */}
       <a
-        href="https://t.me/yoru47"
+        href="https://t.me/yory47"
         target="_blank"
         rel="noreferrer"
         className="p-4 rounded-2xl bg-gradient-to-r from-sky-950/60 via-zinc-900 to-black border border-sky-500/30 flex items-center justify-between group hover:border-sky-400 transition cursor-pointer shadow-md block"
@@ -152,7 +152,7 @@ export default function ProfileView({
               Besoin d'aide ? Support VIP Direct
             </h4>
             <p className="text-[10px] font-mono text-zinc-400">
-              Assistance Telegram 24/7 disponible avec @yoru47
+              Assistance Telegram 24/7 disponible avec @yory47
             </p>
           </div>
         </div>

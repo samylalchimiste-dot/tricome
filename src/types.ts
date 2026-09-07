@@ -31,12 +31,12 @@ export interface VideoItem {
 }
 
 export function getCleanAuthor(author?: string): string {
-  if (!author) return 'TRICOMA LAANASSAR';
+  if (!author) return 'SHELF TERPS';
   const clean = author.trim();
-  if (/biscotti|aliens|biscottiboy/i.test(clean)) {
-    return 'TRICOMA LAANASSAR';
+  if (/biscotti|aliens|biscottiboy|tricoma/i.test(clean)) {
+    return 'SHELF TERPS';
   }
-  return clean || 'TRICOMA LAANASSAR';
+  return clean || 'SHELF TERPS';
 }
 
 export interface CartItem {
@@ -102,7 +102,7 @@ export const DEFAULT_MARQUEE_CONFIG: MarqueeConfig = {
   enabled: true,
   speed: 'medium',
   items: [
-    { id: 'm1', text: '💎 TRICOMA AL ANASSAR — RÉSERVE PRIVÉE OFFICIELLE 💎', active: true, order: 1 },
+    { id: 'm1', text: '💎 SHELF TERPS — RÉSERVE PRIVÉE OFFICIELLE 💎', active: true, order: 1 },
     { id: 'm2', text: '🚀 LIVRAISON EXPRESS 24H/48H DISCRÈTE & SÉCURISÉE', active: true, order: 2 },
     { id: 'm3', text: '🔒 ACCÈS PRIVÉ VÉRIFIÉ • RÉSERVE EXCLUSIVE', active: true, order: 3 },
     { id: 'm4', text: '✨ EXTRACTIONS D\'EXCEPTION & FLEURS D\'ÉLITE', active: true, order: 4 },
