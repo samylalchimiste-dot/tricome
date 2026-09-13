@@ -29,11 +29,12 @@ import {
   Truck,
   Power,
   PowerOff,
-  Menu
+  Menu,
+  MapPin
 } from 'lucide-react';
 
 import { getProducts, DEFAULT_PRODUCTS, getBrandingSettings, verifyAccess, verifyAdminPassword, getAdminPasswordToken, getReviews, getUserProfile, getMyOrders } from './db';
-import { VideoItem, CartItem, BrandingSettings, getPriceForSize, getDefaultSizeForProduct, ReviewItem, UserProfile, Order } from './types';
+import { VideoItem, CartItem, BrandingSettings, getPriceForSize, getDefaultSizeForProduct, ReviewItem, UserProfile, Order, SupportedCity, SUPPORTED_CITIES } from './types';
 
 import { useLanguage } from './i18n/LanguageContext';
 
@@ -126,6 +127,37 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>('Tous');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  // City selection state (HOME -> SELECT CITY -> CITY MENU -> PRODUCTS)
+  const [selectedCity, setSelectedCity] = useState<SupportedCity | null>(() => {
+    try {
+      const saved = localStorage.getItem('biscotti_selected_city');
+      if (saved && ['malaga', 'sevilla', 'barcelona', 'amsterdam', 'germany'].includes(saved)) {
+        return saved as SupportedCity;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleSelectCity = useCallback((city: SupportedCity) => {
+    setSelectedCity(city);
+    try {
+      localStorage.setItem('biscotti_selected_city', city);
+    } catch (e) {
+      console.warn('Could not save selected city', e);
+    }
+  }, []);
+
+  const handleClearCity = useCallback(() => {
+    setSelectedCity(null);
+    try {
+      localStorage.removeItem('biscotti_selected_city');
+    } catch (e) {
+      console.warn('Could not clear selected city', e);
+    }
+  }, []);
 
   const toggleFavorite = (productId: string) => {
     setFavorites((prev) => {
@@ -491,7 +523,7 @@ export default function App() {
     triggerHaptic('success', 'Commande Validée');
     setCart([]);
     localStorage.removeItem('omerta_cart');
-    showToast('Commande transmise avec succès ! Support : @yory47');
+    showToast('Commande transmise avec succès ! Support : @BISCOTTIBOY10');
   };
 
   const handleAdminUnlockSubmit = async (e: FormEvent) => {
@@ -591,7 +623,7 @@ export default function App() {
               APPLICATION ÉTEINTE
             </h1>
             <p className="text-xs text-neutral-400 font-mono tracking-widest uppercase">
-              SHELF TERPS — RÉSERVE HORS LIGNE
+              TRICOMA AL ANASSAR — RÉSERVE HORS LIGNE
             </p>
           </div>
 
@@ -664,19 +696,39 @@ export default function App() {
                 <img src={branding.logoUrl} alt="Logo" className="w-9 h-9 md:w-10 md:h-10 rounded-2xl border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.3)] object-cover bg-black group-hover:scale-105 transition duration-300" />
               ) : (
                 <div className="w-9 h-9 md:w-10 md:h-10 rounded-2xl border border-amber-500/40 flex items-center justify-center bg-gradient-to-br from-amber-500/20 via-black to-orange-500/20 text-amber-400 font-mono font-black text-xs md:text-sm shadow-[0_0_12px_rgba(245,158,11,0.3)]">
-                  ST
+                  BB
                 </div>
               )}
               <div className="hidden sm:block">
-                <h1 className="font-mono text-xs md:text-sm tracking-[0.2em] font-black uppercase text-white flex items-center gap-1 group-hover:text-amber-400 transition">
-                  SHELF
+                <h1 className="font-mono text-xs md:text-sm tracking-[0.15em] font-black uppercase text-white flex items-center gap-1 group-hover:text-amber-400 transition">
+                  BISCOTTI BOYS
                   <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" />
                 </h1>
                 <span className="text-[7px] md:text-[8px] text-amber-400/80 font-mono uppercase tracking-[0.2em] block -mt-0.5 font-bold">
-                  TERPS
+                  BOT VIP • PRIVATE
                 </span>
               </div>
             </div>
+
+            {/* Quick Active City Header Indicator */}
+            {selectedCity && (
+              <button
+                onClick={() => {
+                  triggerHaptic('medium');
+                  handleClearCity();
+                  setActiveTab('home');
+                }}
+                className="hidden xs:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-mono text-[10px] font-bold transition cursor-pointer"
+                title="Changer de ville"
+              >
+                <MapPin className="w-3 h-3 text-amber-400" />
+                <span>
+                  {SUPPORTED_CITIES.find((c) => c.id === selectedCity)?.flag}{' '}
+                  {SUPPORTED_CITIES.find((c) => c.id === selectedCity)?.name.toUpperCase()}
+                </span>
+                <span className="text-[9px] text-zinc-400 hover:text-white">✕</span>
+              </button>
+            )}
           </div>
 
           {/* Right Action Icons Bar */}
@@ -766,6 +818,9 @@ export default function App() {
             onNavigateTab={setActiveTab}
             triggerHaptic={triggerHaptic}
             showToast={showToast}
+            selectedCity={selectedCity}
+            onSelectCity={handleSelectCity}
+            onClearCity={handleClearCity}
           />
         )}
 
@@ -778,6 +833,9 @@ export default function App() {
             onToggleFavorite={toggleFavorite}
             onSelectProduct={setSelectedProduct}
             triggerHaptic={triggerHaptic}
+            selectedCity={selectedCity}
+            onSelectCity={handleSelectCity}
+            onClearCity={handleClearCity}
           />
         )}
 
@@ -789,6 +847,7 @@ export default function App() {
               setActiveTab('catalog');
             }}
             triggerHaptic={triggerHaptic}
+            selectedCity={selectedCity}
           />
         )}
 
@@ -852,6 +911,8 @@ export default function App() {
         cartCount={cartCount}
         triggerHaptic={triggerHaptic}
         logoUrl={branding?.logoUrl}
+        selectedCity={selectedCity}
+        onClearCity={handleClearCity}
       />
 
       {/* SEARCH MODAL */}
@@ -862,6 +923,7 @@ export default function App() {
         onSelectProduct={(p) => setSelectedProduct(p)}
         onQuickAddToCart={handleQuickAddToCart}
         triggerHaptic={triggerHaptic}
+        selectedCity={selectedCity}
       />
 
       {/* ======================================================= */}

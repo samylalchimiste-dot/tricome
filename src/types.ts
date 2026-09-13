@@ -3,6 +3,44 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export type SupportedCity = 'malaga' | 'sevilla' | 'barcelona' | 'amsterdam' | 'germany';
+
+export interface CityOption {
+  id: SupportedCity;
+  name: string;
+  country: string;
+  flag: string;
+  subtitle: string;
+  tag?: string;
+}
+
+export const SUPPORTED_CITIES: CityOption[] = [
+  { id: 'malaga', name: 'Málaga', country: 'Espagne', flag: '🇪🇸', subtitle: 'Costa del Sol Reserve' },
+  { id: 'sevilla', name: 'Sevilla', country: 'Espagne', flag: '🇪🇸', subtitle: 'Andalucía Selection' },
+  { id: 'barcelona', name: 'Barcelona', country: 'Espagne', flag: '🇪🇸', subtitle: 'Catalonia Club Private' },
+  { id: 'amsterdam', name: 'Amsterdam', country: 'Pays-Bas', flag: '🇳🇱', subtitle: 'Dam Connoisseur Menu' },
+  { id: 'germany', name: 'Germany', country: 'Deutschland', flag: '🇩🇪', subtitle: 'Federal Top Shelf' },
+];
+
+export function isProductInCity(product: VideoItem, cityId?: SupportedCity | string | null): boolean {
+  if (!cityId) return true;
+  const target = String(cityId).toLowerCase().trim();
+
+  // Check array of cities first
+  if (Array.isArray(product.cities) && product.cities.length > 0) {
+    return product.cities.some((c) => String(c).toLowerCase().trim() === target);
+  }
+
+  // Check single city
+  if (product.city && typeof product.city === 'string' && product.city.trim()) {
+    return product.city.toLowerCase().trim() === target;
+  }
+
+  // Backwards compatibility: if product has neither cities nor city assigned yet,
+  // it is visible across all cities until configured by admin
+  return true;
+}
+
 export interface VideoItem {
   id: string;
   title: string;
@@ -10,6 +48,8 @@ export interface VideoItem {
   price: number;
   currency: string;
   category: 'Double Filtré' | 'Frozen Sift' | 'Beldi' | 'Sift Glacé' | string;
+  city?: string;
+  cities?: string[];
   displayZone?: string;
   videoUrl?: string;
   thumbnailUrl?: string;
@@ -31,12 +71,12 @@ export interface VideoItem {
 }
 
 export function getCleanAuthor(author?: string): string {
-  if (!author) return 'SHELF TERPS';
+  if (!author) return 'BISCOTTI BOYS';
   const clean = author.trim();
-  if (/biscotti|aliens|biscottiboy|tricoma/i.test(clean)) {
-    return 'SHELF TERPS';
+  if (/shelfterps|shelf\s*terps|tricoma|anassar/i.test(clean)) {
+    return 'BISCOTTI BOYS';
   }
-  return clean || 'SHELF TERPS';
+  return clean || 'BISCOTTI BOYS';
 }
 
 export interface CartItem {
@@ -102,10 +142,10 @@ export const DEFAULT_MARQUEE_CONFIG: MarqueeConfig = {
   enabled: true,
   speed: 'medium',
   items: [
-    { id: 'm1', text: '💎 SHELF TERPS — RÉSERVE PRIVÉE OFFICIELLE 💎', active: true, order: 1 },
-    { id: 'm2', text: '🚀 LIVRAISON EXPRESS 24H/48H DISCRÈTE & SÉCURISÉE', active: true, order: 2 },
-    { id: 'm3', text: '🔒 ACCÈS PRIVÉ VÉRIFIÉ • RÉSERVE EXCLUSIVE', active: true, order: 3 },
-    { id: 'm4', text: '✨ EXTRACTIONS D\'EXCEPTION & FLEURS D\'ÉLITE', active: true, order: 4 },
+    { id: 'm1', text: '💎 BISCOTTI BOYS FARM — RÉSERVE PRIVÉE EUROPÉENNE 💎', active: true, order: 1 },
+    { id: 'm2', text: '🇪🇸 MÁLAGA • 🇪🇸 SEVILLA • 🇪🇸 BARCELONA • 🇳🇱 AMSTERDAM • 🇩🇪 GERMANY', active: true, order: 2 },
+    { id: 'm3', text: '🚀 EXPÉDITION & RETRAIT 24H/48H DISCRÈTE & SÉCURISÉE', active: true, order: 3 },
+    { id: 'm4', text: '✨ EXTRACTIONS D\'EXCEPTION & SÉLECTIONS D\'ÉLITE', active: true, order: 4 },
     { id: 'm5', text: '👑 ESPACE VIP : OFFRES RÉSERVÉES & CATALOGUE EXCLUSIF', active: true, order: 5 },
   ],
 };

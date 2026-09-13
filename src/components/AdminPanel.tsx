@@ -35,7 +35,7 @@ import {
   ChevronDown,
   User
 } from 'lucide-react';
-import { VideoItem, Order, BrandingSettings, SectionTitle, WhitelistItem, Reward, PromoCode, PendingApproval, MarqueeItem, DEFAULT_MARQUEE_CONFIG } from '../types';
+import { VideoItem, Order, BrandingSettings, SectionTitle, WhitelistItem, Reward, PromoCode, PendingApproval, MarqueeItem, DEFAULT_MARQUEE_CONFIG, SupportedCity, SUPPORTED_CITIES } from '../types';
 import { addProduct, deleteProduct, getOrders, updateOrderStatus, deleteOrder, getBrandingSettings, updateBrandingSettings, uploadFileRaw, getWhitelist, addWhitelistItem, deleteWhitelistItem, setAdminPasswordToken, clearAdminPasswordToken, getConnectionLogs, deleteConnectionLog, triggerTelegramBroadcast, getTelegramBroadcastStatus, resetTelegramBroadcastStatus, undoLastTelegramBroadcast, editLastTelegramBroadcast, deleteTelegramMessageManual, editTelegramMessageManual, getAllUsersProfile, getRewards, saveReward, deleteReward, getPromoCodes, savePromoCode, deletePromoCode, getPendingApprovals, approvePendingRequest, rejectPendingRequest } from '../db';
 
 const isVideoUrl = (url?: string): boolean => {
@@ -496,7 +496,7 @@ export default function AdminPanel({
     launchScreenUrl: '',
     homepageHeroBgUrl: '',
     logoUrl: '',
-    introStatusLine: 'SHELF TERPS — RÉSERVE PRIVÉE'
+    introStatusLine: 'TRICOMA AL ANASSAR — RÉSERVE PRIVÉE'
   });
 
   // States for adding product (Morocco MAD strictly)
@@ -506,8 +506,15 @@ export default function AdminPanel({
   const [newWholesalePrice, setNewWholesalePrice] = useState<number>(0);
   const [newCategory, setNewCategory] = useState<string>('WPFF');
   const [newDisplayZone, setNewDisplayZone] = useState<string>(''); // Optional storefront placement (e.g. MEET UP RABAT)
-  const [newAuthor, setNewAuthor] = useState<string>('SHELF TERPS');
+  const [newAuthor, setNewAuthor] = useState<string>('BISCOTTI BOYS BOT');
+  const [newCities, setNewCities] = useState<SupportedCity[]>(['malaga', 'sevilla', 'barcelona', 'amsterdam', 'germany']);
   const [isFeatured, setIsFeatured] = useState<boolean>(true);
+
+  const toggleNewCity = (cityId: SupportedCity) => {
+    setNewCities((prev) =>
+      prev.includes(cityId) ? prev.filter((c) => c !== cityId) : [...prev, cityId]
+    );
+  };
   const [newBadgeType, setNewBadgeType] = useState<string>('NONE');
   const [newBadgePromo, setNewBadgePromo] = useState<string>('-10%');
   
@@ -1051,6 +1058,8 @@ export default function AdminPanel({
         pricePerGram: Number(newPrice),
         currency: 'EUR',
         category: newCategory,
+        city: newCities.length > 0 ? newCities[0] : undefined,
+        cities: newCities,
         displayZone: newDisplayZone || undefined,
         isPremium: true,
         isFeatured: isFeatured,
@@ -1196,7 +1205,7 @@ export default function AdminPanel({
             )}
             <div className="h-[1px] bg-neutral-900 my-2" />
             <div className="text-[8px] text-zinc-500 leading-normal uppercase">
-              ⚠️ Cet ID n'est pas enregistré dans l'infrastructure de la réserve SHELF TERPS. Veuillez demander au propriétaire principal d'ajouter votre ID Telegram ci-dessus à la Whitelist pour accorder l'accès complet instantanément.
+              ⚠️ Cet ID n'est pas enregistré dans l'infrastructure de la réserve TRICOMA AL ANASSAR. Veuillez demander au propriétaire principal d'ajouter votre ID Telegram ci-dessus à la Whitelist pour accorder l'accès complet instantanément.
             </div>
           </div>
 
@@ -1204,7 +1213,7 @@ export default function AdminPanel({
             onClick={onClose}
             className="w-full py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-gray-400 text-[9px] font-mono tracking-widest uppercase transition duration-300 cursor-pointer shadow-md"
           >
-            RETOUR AU STORE SHELF TERPS
+            RETOUR AU STORE TRICOMA AL ANASSAR
           </button>
         </div>
       </div>
@@ -1466,6 +1475,45 @@ export default function AdminPanel({
                    Ce produit sera affiché au tarif fixe et unique de <span className="text-[#D4AF37] font-bold">{newPrice} €</span>. Les frais de livraison sont offerts pour tous les membres du Club Privilégié.
                  </div>
 
+                {/* CITY AVAILABILITY */}
+                <div className="p-3 bg-black/60 rounded-xl border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[8.5px] font-mono text-[#D4AF37] font-bold uppercase tracking-wider">
+                      CITY AVAILABILITY :
+                    </label>
+                    <span className="text-[7.5px] font-mono text-zinc-500 uppercase">
+                      {newCities.length} ville(s) sélectionnée(s)
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {SUPPORTED_CITIES.map((city) => {
+                      const isChecked = newCities.includes(city.id);
+                      return (
+                        <label
+                          key={city.id}
+                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs font-mono cursor-pointer transition select-none ${
+                            isChecked
+                              ? 'bg-amber-500/20 border-amber-400 text-white shadow-[0_0_10px_rgba(245,158,11,0.15)]'
+                              : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleNewCity(city.id)}
+                            className="w-3.5 h-3.5 accent-[#D4AF37] rounded cursor-pointer"
+                          />
+                          <span className="text-sm">{city.flag}</span>
+                          <span className="font-bold text-[11px]">{city.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[8px] font-mono text-zinc-500">
+                    Cochez une ou plusieurs villes où cet article doit être proposé aux clients.
+                  </p>
+                </div>
+
                 <div>
                   <label className="block text-[8px] font-mono text-gray-500 uppercase mb-1">Affiche Narrative :</label>
                   <textarea
@@ -1657,6 +1705,23 @@ export default function AdminPanel({
                             Achat: <span className="text-zinc-400">{p.wholesalePrice} €</span> • Marge: <span className="text-emerald-500 font-extrabold">{(p.price || p.pricePerGram || 0) - p.wholesalePrice} €</span>
                           </span>
                         )}
+                        <span className="flex items-center gap-1 mt-1">
+                          {SUPPORTED_CITIES.map((c) => {
+                            const isAssigned = Array.isArray(p.cities) && p.cities.length > 0
+                              ? p.cities.includes(c.id)
+                              : p.city ? p.city.toLowerCase() === c.id : true;
+                            if (!isAssigned) return null;
+                            return (
+                              <span
+                                key={c.id}
+                                className="text-[7.5px] px-1 py-0.2 rounded bg-black/50 border border-white/10 text-zinc-300 font-mono"
+                                title={c.name}
+                              >
+                                {c.flag} {c.name}
+                              </span>
+                            );
+                          })}
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -1823,6 +1888,57 @@ export default function AdminPanel({
                         placeholder="Arômes, saveurs, effets..."
                       />
                     </div>
+                  </div>
+
+                  {/* CITY AVAILABILITY */}
+                  <div className="p-3 bg-black/60 rounded-xl border border-white/10 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-[8.5px] font-mono text-[#D4AF37] font-bold uppercase tracking-wider">
+                        CITY AVAILABILITY :
+                      </label>
+                      <span className="text-[7.5px] font-mono text-zinc-500 uppercase">
+                        {(Array.isArray(editingProduct.cities) ? editingProduct.cities.length : (editingProduct.city ? 1 : 0))} ville(s) assignée(s)
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {SUPPORTED_CITIES.map((city) => {
+                        const currentCities = Array.isArray(editingProduct.cities) && editingProduct.cities.length > 0
+                          ? editingProduct.cities
+                          : (editingProduct.city ? [editingProduct.city] : []);
+                        const isChecked = currentCities.includes(city.id);
+                        return (
+                          <label
+                            key={city.id}
+                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-xs font-mono cursor-pointer transition select-none ${
+                              isChecked
+                                ? 'bg-amber-500/20 border-amber-400 text-white shadow-[0_0_10px_rgba(245,158,11,0.15)]'
+                                : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => {
+                                const existing = Array.isArray(editingProduct.cities) ? [...editingProduct.cities] : (editingProduct.city ? [editingProduct.city] : []);
+                                const hasIt = existing.includes(city.id);
+                                const updated = hasIt ? existing.filter(c => c !== city.id) : [...existing, city.id];
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  cities: updated,
+                                  city: updated.length > 0 ? updated[0] : undefined
+                                });
+                              }}
+                              className="w-3.5 h-3.5 accent-[#D4AF37] rounded cursor-pointer"
+                            />
+                            <span className="text-sm">{city.flag}</span>
+                            <span className="font-bold text-[11px]">{city.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[8px] font-mono text-zinc-500">
+                      Cochez une ou plusieurs villes où cet article doit être proposé aux clients.
+                    </p>
                   </div>
 
                   <div>
@@ -2757,7 +2873,7 @@ export default function AdminPanel({
                     type="text"
                     value={settings.introStatusLine || ''}
                     onChange={(e) => setBrandingSettings({ ...settings, introStatusLine: e.target.value })}
-                    placeholder="SHELF TERPS — RÉSERVE PRIVÉE"
+                    placeholder="TRICOMA AL ANASSAR — RÉSERVE PRIVÉE"
                     className="w-full text-[9px] py-1.5 px-2.5 rounded bg-black border border-[#222] focus:border-[#D4AF37] text-white outline-none"
                   />
                 </div>
@@ -2968,7 +3084,7 @@ export default function AdminPanel({
                         const newId = 'm_' + Date.now();
                         const newItem: MarqueeItem = {
                           id: newId,
-                          text: '✨ Nouveau message SHELF TERPS',
+                          text: '✨ Nouveau message TRICOMA AL ANASSAR',
                           active: true,
                           order: cfg.items.length + 1
                         };
@@ -4270,7 +4386,7 @@ export default function AdminPanel({
                         return (
                           <tr key={user.telegramId} className="hover:bg-white/5 transition-colors">
                             <td className="py-2.5 pr-2">
-                              <span className="block text-white font-bold">{user.pseudo || "Membre SHELF TERPS"}</span>
+                              <span className="block text-white font-bold">{user.pseudo || "Membre TRICOMA AL ANASSAR"}</span>
                               <span className="text-[7.5px] text-zinc-500">ID: {user.telegramId} @{user.username || 'N/A'}</span>
                             </td>
                             <td className="py-2.5">
@@ -4427,7 +4543,7 @@ export default function AdminPanel({
             {/* LIST ACTIVE REWARDS */}
             <div className="bg-[#111] p-3.5 rounded-xl border border-white/5 space-y-3">
               <span className="block text-[9px] font-mono text-zinc-500 font-extrabold uppercase tracking-widest pl-1">
-                📋 CATALOGUE DES RÉCOMPENSES SHELF TERPS DELUXE
+                📋 CATALOGUE DES RÉCOMPENSES TRICOMA AL ANASSAR DELUXE
               </span>
 
               {loadingRewards ? (

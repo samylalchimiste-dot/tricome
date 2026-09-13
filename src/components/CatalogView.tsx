@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Heart, Sparkles, ChevronDown, ChevronRight, X } from 'lucide-react';
-import { VideoItem, getCleanAuthor } from '../types';
+import { VideoItem, getCleanAuthor, SupportedCity, isProductInCity } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import ProductCardMedia from './ProductCardMedia';
 import ExtractionBadge from './ExtractionBadge';
+import CitySelector from './CitySelector';
 
 interface CatalogViewProps {
   products: VideoItem[];
@@ -14,6 +15,9 @@ interface CatalogViewProps {
   onToggleFavorite: (id: string) => void;
   onSelectProduct: (product: VideoItem) => void;
   triggerHaptic: (style: 'light' | 'medium' | 'heavy') => void;
+  selectedCity: SupportedCity | null;
+  onSelectCity: (city: SupportedCity) => void;
+  onClearCity: () => void;
 }
 
 interface CategoryTab {
@@ -31,26 +35,36 @@ export default function CatalogView({
   favorites,
   onToggleFavorite,
   onSelectProduct,
-  triggerHaptic
+  triggerHaptic,
+  selectedCity,
+  onSelectCity,
+  onClearCity
 }: CatalogViewProps) {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'featured' | 'priceAsc' | 'priceDesc' | 'rating'>('featured');
 
+  // Products filtered strictly for the selected city
+  const cityProducts = useMemo(() => {
+    if (!products) return [];
+    if (!selectedCity) return [];
+    return products.filter((p) => isProductInCity(p, selectedCity));
+  }, [products, selectedCity]);
+
   const categoryTabs = useMemo<CategoryTab[]>(() => {
     const baseTabs: CategoryTab[] = [
       { id: 'all', label: 'TOUS', query: 'Tous', icon: Sparkles },
-      { id: 'drysift', label: 'DRYSIFT 90U', query: 'Dry Sift', emoji: '🍯' },
-      { id: 'frozensift', label: 'FROZEN SIFT PREMIUM', query: 'Frozen', emoji: '🧊' },
+      { id: 'frozensift', label: 'FRESH FROZEN', query: 'Frozen', emoji: '🧊' },
       { id: 'wppf', label: 'WPPF', query: 'WPFF', emoji: '🧈' },
       { id: 'static', label: 'STATIC', query: 'Static', emoji: '🧤' },
+      { id: 'drysift', label: 'DRYSIFT 90U', query: 'Dry Sift', emoji: '🍯' },
       { id: 'beldia', label: 'BELDIA', query: 'Beldia', emoji: '🇲🇦' },
       { id: 'mousse', label: 'LA MOUSSE', query: 'La Mousse', emoji: '🫧' }
     ];
 
     const knownIds = new Set(['all', 'drysift', 'frozensift', 'wppf', 'static', 'beldia', 'mousse']);
 
-    (products || []).forEach((p) => {
+    (cityProducts || []).forEach((p) => {
       if (p.category && p.category.trim()) {
         const cTrim = p.category.trim();
         const cLower = cTrim.toLowerCase();
@@ -81,10 +95,10 @@ export default function CatalogView({
     });
 
     return baseTabs;
-  }, [products]);
+  }, [cityProducts]);
 
   const filteredProducts = useMemo(() => {
-    return products
+    return cityProducts
       .filter((p) => {
         const productCat = (p.category || '').toLowerCase().trim();
         const selCat = (selectedCategory || 'Tous').toLowerCase().trim();
@@ -126,7 +140,7 @@ export default function CatalogView({
         if (sortBy === 'rating') return (b.rating || 5) - (a.rating || 5);
         return 0;
       });
-  }, [products, selectedCategory, searchQuery, sortBy, t]);
+  }, [cityProducts, selectedCategory, searchQuery, sortBy, t]);
 
   const activeTabId = useMemo(() => {
     const sel = (selectedCategory || 'Tous').toLowerCase().trim();
@@ -140,8 +154,31 @@ export default function CatalogView({
     return sel;
   }, [selectedCategory]);
 
+  if (!selectedCity) {
+    return (
+      <div className="space-y-4 pb-24 pt-2 px-3 sm:px-4 max-w-2xl mx-auto" id="catalog-view">
+        <CitySelector
+          selectedCity={selectedCity}
+          onSelectCity={onSelectCity}
+          onClearCity={onClearCity}
+          products={products}
+          triggerHaptic={triggerHaptic}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 pb-24 pt-2 px-3 sm:px-4 max-w-2xl mx-auto" id="catalog-view">
+      {/* City Header & Switcher */}
+      <CitySelector
+        selectedCity={selectedCity}
+        onSelectCity={onSelectCity}
+        onClearCity={onClearCity}
+        products={products}
+        triggerHaptic={triggerHaptic}
+      />
+
       {/* Title & Filter Header */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -155,7 +192,7 @@ export default function CatalogView({
               </span>
             </h2>
             <p className="text-xs text-zinc-400 font-mono">
-              SHELF TERPS • Expédition sous 24h
+              BISCOTTI BOYS BOT • Expédition sous 24h
             </p>
           </div>
 

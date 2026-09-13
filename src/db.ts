@@ -99,9 +99,13 @@ function filterForbiddenProducts(list: VideoItem[]): VideoItem[] {
     })
     .map((p) => ({
       ...p,
+      city: p.city ? String(p.city).toLowerCase() : undefined,
+      cities: Array.isArray(p.cities) && p.cities.length > 0
+        ? p.cities.map((c: any) => String(c).toLowerCase())
+        : (p.city ? [String(p.city).toLowerCase()] : undefined),
       author: getCleanAuthor(p.author),
-      title: (p.title || '').replace(/biscotti(\s*boys)?|tricoma(\s*laanassar)?/gi, 'SHELF TERPS'),
-      description: (p.description || '').replace(/biscotti(\s*boys)?|tricoma(\s*laanassar)?/gi, 'SHELF TERPS'),
+      title: (p.title || '').replace(/shelf(\s*terps)?|tricoma(\s*al\s*anassar)?/gi, 'BISCOTTI BOYS'),
+      description: (p.description || '').replace(/shelf(\s*terps)?|tricoma(\s*al\s*anassar)?/gi, 'BISCOTTI BOYS'),
       currency: 'EUR'
     }));
 }
@@ -426,7 +430,7 @@ export async function getBrandingSettings(): Promise<BrandingSettings> {
       launchScreenUrl: '',
       homepageHeroBgUrl: '',
       logoUrl: '',
-      introStatusLine: '🌿💎 SHELF TERPS 💎🌿 — RÉSERVE PRIVÉE',
+      introStatusLine: '🌿💎 BISCOTTI BOYS FARM 💎🌿 — RÉSERVE PRIVÉE',
       sectionTitles: defaultTitles
     };
   }

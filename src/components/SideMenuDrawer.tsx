@@ -12,9 +12,11 @@ import {
   Info,
   Headphones,
   Send,
-  ShieldCheck
+  ShieldCheck,
+  MapPin
 } from 'lucide-react';
 import { useLanguage } from '../i18n/LanguageContext';
+import { SupportedCity, SUPPORTED_CITIES } from '../types';
 
 interface SideMenuDrawerProps {
   isOpen: boolean;
@@ -26,6 +28,8 @@ interface SideMenuDrawerProps {
   cartCount: number;
   triggerHaptic: (style: 'light' | 'medium' | 'heavy') => void;
   logoUrl?: string;
+  selectedCity?: SupportedCity | null;
+  onClearCity?: () => void;
 }
 
 export default function SideMenuDrawer({
@@ -37,14 +41,18 @@ export default function SideMenuDrawer({
   onOpenVip,
   cartCount,
   triggerHaptic,
-  logoUrl
+  logoUrl,
+  selectedCity,
+  onClearCity
 }: SideMenuDrawerProps) {
   const { t } = useLanguage();
+
+  const currentCityInfo = SUPPORTED_CITIES.find((c) => c.id === selectedCity);
 
   const menuItems = [
     {
       id: 'home',
-      label: 'Accueil & Réserve',
+      label: 'Accueil & Villes',
       icon: Home,
       badge: null,
       action: () => {
@@ -150,19 +158,19 @@ export default function SideMenuDrawer({
             className="relative w-[300px] max-w-[85vw] h-full bg-zinc-950/95 backdrop-blur-2xl border-r border-amber-500/30 shadow-[0_0_50px_rgba(0,0,0,0.95)] flex flex-col justify-between p-5 z-10 overflow-y-auto"
           >
             {/* Top Header inside Drawer */}
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/20 via-black to-yellow-500/20 flex items-center justify-center font-mono font-black text-amber-300 text-sm shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                    ST
+                  <div className="w-10 h-10 rounded-2xl border border-amber-500/40 bg-gradient-to-br from-amber-500/20 via-black to-yellow-500/20 flex items-center justify-center font-mono font-black text-amber-300 text-xs shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+                    BB
                   </div>
                   <div>
                     <h3 className="font-sans text-sm font-black tracking-wider text-white uppercase flex items-center gap-1">
-                      SHELF
+                      BISCOTTI BOYS
                       <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
                     </h3>
                     <span className="text-[8px] font-mono tracking-widest text-amber-300/80 uppercase font-bold block">
-                      TERPS • RÉSERVE
+                      BOT VIP • PRIVATE CLUB
                     </span>
                   </div>
                 </div>
@@ -176,6 +184,35 @@ export default function SideMenuDrawer({
                 >
                   <X className="w-4 h-4" />
                 </button>
+              </div>
+
+              {/* Active City Selection Card */}
+              <div className="p-3 rounded-2xl bg-zinc-900/80 border border-amber-500/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                    <div>
+                      <span className="text-[9px] font-mono uppercase text-zinc-400 block">
+                        Ville sélectionnée
+                      </span>
+                      <span className="text-xs font-mono font-black text-white">
+                        {currentCityInfo ? `${currentCityInfo.flag} ${currentCityInfo.name}` : 'Aucune ville choisie'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      triggerHaptic('medium');
+                      if (onClearCity) onClearCity();
+                      onNavigateTab('home');
+                      onClose();
+                    }}
+                    className="px-2.5 py-1 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/50 text-[10px] font-mono font-bold text-amber-300 transition cursor-pointer"
+                  >
+                    Changer
+                  </button>
+                </div>
               </div>
 
               {/* Menu Navigation List */}
@@ -235,7 +272,7 @@ export default function SideMenuDrawer({
             <div className="pt-6 border-t border-white/10 text-center space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-widest">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                <span>SHELF TERPS — LIVE</span>
+                <span>BISCOTTI BOYS BOT — LIVE</span>
               </div>
               <p className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest">
                 0-LOG SECURE TELEGRAM APP

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, X, Plus, Sparkles, Check } from 'lucide-react';
-import { VideoItem } from '../types';
+import { Search, X, Plus, Sparkles, Check, MapPin } from 'lucide-react';
+import { VideoItem, SupportedCity, isProductInCity, SUPPORTED_CITIES } from '../types';
 import ProductCardMedia from './ProductCardMedia';
 import ExtractionBadge from './ExtractionBadge';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -13,6 +13,7 @@ interface SearchModalProps {
   onSelectProduct: (product: VideoItem) => void;
   onQuickAddToCart?: (product: VideoItem) => void;
   triggerHaptic: (style: 'light' | 'medium' | 'heavy') => void;
+  selectedCity?: SupportedCity | null;
 }
 
 export default function SearchModal({
@@ -21,13 +22,19 @@ export default function SearchModal({
   products,
   onSelectProduct,
   onQuickAddToCart,
-  triggerHaptic
+  triggerHaptic,
+  selectedCity
 }: SearchModalProps) {
   const { t } = useLanguage();
   const [query, setQuery] = useState<string>('');
   const [addedId, setAddedId] = useState<string | null>(null);
 
+  const cityInfo = SUPPORTED_CITIES.find((c) => c.id === selectedCity);
+
   const filtered = products.filter((p) => {
+    if (selectedCity && !isProductInCity(p, selectedCity)) {
+      return false;
+    }
     if (!query.trim()) return true;
     const q = query.toLowerCase();
     return (
@@ -93,7 +100,15 @@ export default function SearchModal({
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 <span>Résultats ({filtered.length})</span>
               </span>
-              <span className="text-[10px] text-neutral-500 uppercase">SHELF TERPS RESERVE</span>
+              <span className="text-[10px] text-neutral-400 uppercase font-bold flex items-center gap-1">
+                {cityInfo ? (
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300">
+                    {cityInfo.flag} {cityInfo.name}
+                  </span>
+                ) : (
+                  <span>BISCOTTI BOYS BOT</span>
+                )}
+              </span>
             </div>
 
             {/* Results List */}

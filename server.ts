@@ -1,5 +1,5 @@
 /**
- * SHELF TERPS - Production Server Engine v2.0
+ * TRICOMA AL ANASSAR - Production Server Engine v2.0
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -1592,8 +1592,8 @@ const DEFAULT_SETTINGS = {
   homepageHeroBgUrl: '/shelf_terps_bot_avatar.jpg',
   logoUrl: '/shelf_terps_bot_avatar.jpg',
   telegramChannelUrl: 'https://t.me/+bMAog56A3AthODM0',
-  telegramSupportUrl: 'https://t.me/yory47',
-  introStatusLine: 'SHELF TERPS — RÉSERVE PRIVÉE',
+  telegramSupportUrl: 'https://t.me/BISCOTTIBOY10',
+  introStatusLine: 'BISCOTTI BOYS FARM — RÉSERVE PRIVÉE',
   sectionTitles: [
     { id: '1', text: 'LA RÉSERVE PRIVÉE', category: 'All', size: 'L', color: '#D4AF37', enabled: true, order: 1 },
     { id: '2', text: 'SELECTION DRY SIFT', category: 'DRY SIFT', size: 'L', color: '#D4AF37', enabled: true, order: 2 },
@@ -1649,17 +1649,24 @@ function saveSettingsToDisk(data: any) {
 function sanitizeProductData(p: any): any {
   if (!p || typeof p !== 'object') return p;
   let author = (p.author || '').trim();
-  if (!author || /biscotti|aliens|biscottiboy|tricoma/i.test(author)) {
-    author = 'SHELF TERPS';
+  if (!author || /shelfterps|shelf\s*terps|tricoma|anassar/i.test(author)) {
+    author = 'BISCOTTI BOYS';
   }
-  let title = (p.title || '').replace(/biscotti(\s*boys)?|tricoma(\s*laanassar)?/gi, 'SHELF TERPS').trim();
-  let desc = (p.description || '').replace(/biscotti(\s*boys)?|tricoma(\s*laanassar)?/gi, 'SHELF TERPS').trim();
-  let category = (p.category || 'STATIC').replace(/biscotti(\s*boys)?|tricoma(\s*laanassar)?/gi, 'SHELF TERPS').trim();
+  let title = (p.title || '').replace(/shelf(\s*terps)?|tricoma(\s*al\s*anassar)?/gi, 'BISCOTTI BOYS').trim();
+  let desc = (p.description || '').replace(/shelf(\s*terps)?|tricoma(\s*al\s*anassar)?/gi, 'BISCOTTI BOYS').trim();
+  let category = (p.category || 'STATIC').replace(/shelf(\s*terps)?|tricoma(\s*al\s*anassar)?/gi, 'BISCOTTI BOYS').trim();
+
+  let city = p.city ? String(p.city).toLowerCase().trim() : undefined;
+  let cities = Array.isArray(p.cities) && p.cities.length > 0 
+    ? p.cities.map((c: any) => String(c).toLowerCase().trim()) 
+    : (city ? [city] : undefined);
 
   return {
     ...p,
-    author: author || 'SHELF TERPS',
-    title: title || 'SHELF TERPS SÉLECTION',
+    city,
+    cities,
+    author: author || 'BISCOTTI BOYS',
+    title: title || 'BISCOTTI BOYS SÉLECTION',
     description: desc,
     category: category || 'STATIC',
     currency: 'EUR',
@@ -2779,15 +2786,22 @@ async function syncLocalToFirestoreIfNeeded() {
           data.introStatusLine.includes('VELUNA') || 
           data.introStatusLine.includes('pyjama') || 
           data.introStatusLine.includes('ALIENS') ||
-          data.introStatusLine.includes('BISCOTTI') ||
           data.introStatusLine.includes('DRYTECH') ||
-          data.introStatusLine.includes('TRICOMA')
+          data.introStatusLine.includes('SHELF TERPS') ||
+          data.introStatusLine.includes('LAANASSAR') ||
+          data.introStatusLine.includes('TRICOMA') ||
+          data.introStatusLine.includes('BISCOTTI BOYS BOT')
         ) {
-          data.introStatusLine = 'SHELF TERPS — RÉSERVE PRIVÉE';
+          data.introStatusLine = 'BISCOTTI BOYS FARM — RÉSERVE PRIVÉE';
           needsUpdate = true;
         }
 
-        if (data.promoImageUrl && (data.promoImageUrl.includes('biscotti') || data.promoImageUrl.includes('aliens'))) {
+        if (!data.telegramSupportUrl || data.telegramSupportUrl.toLowerCase().includes('yory')) {
+          data.telegramSupportUrl = 'https://t.me/BISCOTTIBOY10';
+          needsUpdate = true;
+        }
+
+        if (data.promoImageUrl && data.promoImageUrl.includes('aliens')) {
           data.promoImageUrl = data.logoUrl || '';
           needsUpdate = true;
         }
@@ -2834,7 +2848,8 @@ async function syncLocalToFirestoreIfNeeded() {
           homepageHeroBgUrl: '/tricoma_logo.png',
           logoUrl: '/tricoma_logo.png',
           adminPassword: 'omerta2026',
-          introStatusLine: 'SHELF TERPS — RÉSERVE PRIVÉE',
+          introStatusLine: 'BISCOTTI BOYS FARM — RÉSERVE PRIVÉE',
+          telegramSupportUrl: 'https://t.me/BISCOTTIBOY10',
           sectionTitles: [
             { id: '1', text: 'LA RÉSERVE PRIVÉE', category: 'All', size: 'L', color: '#D4AF37', enabled: true, order: 1 },
             { id: '2', text: 'SELECTION LA MOUSSE', category: 'LA MOUSSE', size: 'L', color: '#D4AF37', enabled: true, order: 2 },
@@ -4272,7 +4287,7 @@ app.post('/api/pending-approvals/approve', verifyAdminAuth, async (req, res) => 
     if (token) {
       try {
         const appUrl = getTelegramAppUrl();
-        const approvalMsg = `💎 *Félicitations\\! Votre accès VIP à SHELF TERPS a été activé\\!*\n\nVous pouvez dès à présent ouvrir le Shop et découvrir notre catalogue exclusif\\.`;
+        const approvalMsg = `💎 *Félicitations\\! Votre accès VIP à BISCOTTI BOYS FARM a été activé\\!*\n\nVous pouvez dès à présent ouvrir le Shop et découvrir notre catalogue exclusif\\.`;
         
         const payload = {
           chat_id: telegramId,
@@ -4319,7 +4334,7 @@ app.post('/api/pending-approvals/reject', verifyAdminAuth, async (req, res) => {
     const token = getTelegramBotToken();
     if (token && telegramId) {
       try {
-        const rejectMsg = `❌ *Accès refusé*\n\nVotre demande d'accès pour la Mini\\-App SHELF TERPS n'a pas été validée par l'administration\\.`;
+        const rejectMsg = `❌ *Accès refusé*\n\nVotre demande d'accès pour la Mini\\-App BISCOTTI BOYS FARM n'a pas été validée par l'administration\\.`;
         await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -4913,7 +4928,7 @@ async function sendInstagramPromoMessage(chatId: string | number): Promise<{ suc
     return { success: false };
   }
   
-  const defaultText = `💎 SHELF TERPS — RÉSERVE PRIVÉE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📲 CANAUX OFFICIELS & CONTACT :\n📢 Canal Telegram : https://t.me/+bMAog56A3AthODM0\n💬 Contact Unique : @yory47\n\n🛍️ COMMENT COMMANDER ?\nCliquez ci-dessous sur « 🛒 Accéder au Shop » pour découvrir le menu et passer commande.\n\nSHELF TERPS — Pure Excellence ✨`;
+  const defaultText = `💎 BISCOTTI BOYS FARM — RÉSERVE PRIVÉE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📲 CANAUX OFFICIELS & CONTACT :\n📢 Canal Telegram : https://t.me/+bMAog56A3AthODM0\n💬 Contact Unique : @BISCOTTIBOY10\n\n🛍️ COMMENT COMMANDER ?\nCliquez ci-dessous sur « 🛒 Accéder au Shop » pour découvrir le menu et passer commande.\n\nBISCOTTI BOYS FARM — Pure Excellence ✨`;
   let promoMessage = defaultText;
   let promoBtnLabel = "🛒 Accéder au Shop 🛍️";
   let promoUrl1 = "";
@@ -5186,7 +5201,7 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
           console.warn('[TELEGRAM BOT] Failed to load logo settings.', settingsErr);
         }
 
-        const welcomeText = `💎 SHELF TERPS — RÉSERVE PRIVÉE OFFICIELLE 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📢 Canal Officiel : ${channelLink}\n💬 Contact & Support : @yory47\n\n👉 Cliquez ci-dessous sur « 🛒 Accéder au Shop » pour ouvrir le shop directement.`;
+        const welcomeText = `💎 BISCOTTI BOYS FARM — RÉSERVE PRIVÉE OFFICIELLE 💎\nExtractions d'exception, sélections d'élite & catalogue VIP exclusif.\n\n✨ BIENVENUE DANS NOTRE ESPACE OFFICIEL\n\n📢 Canal Officiel : ${channelLink}\n💬 Contact Unique : @BISCOTTIBOY10\n\n👉 Cliquez ci-dessous sur « 🛒 Accéder au Shop » pour ouvrir le shop directement.`;
 
         // Configure user's personal chat menu button directly to active appUrl
         if (!isMenuButtonMethodFrozen) {
@@ -5197,7 +5212,7 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
               chat_id: Number(chatId),
               menu_button: {
                 type: 'web_app',
-                text: '🛍️ SHELF TERPS',
+                text: '🛍️ BISCOTTI BOYS FARM',
                 web_app: { url: appUrl }
               }
             })
@@ -5222,8 +5237,8 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
               url: channelLink
             },
             {
-              text: "💬 Contact (@yory47)",
-              url: "https://t.me/yory47"
+              text: "💬 Contact Unique (@BISCOTTIBOY10)",
+              url: "https://t.me/BISCOTTIBOY10"
             }
           ]
         ];
@@ -5808,7 +5823,7 @@ async function setupTelegramWebhook() {
         body: JSON.stringify({
           menu_button: {
             type: 'web_app',
-            text: '🛍️ SHELF TERPS',
+            text: '🛍️ BISCOTTI BOYS FARM',
             web_app: {
               url: appUrl
             }
@@ -5832,7 +5847,7 @@ async function setupTelegramWebhook() {
         fetch(`https://api.telegram.org/bot${token}/setMyName`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: 'SHELF TERPS' })
+          body: JSON.stringify({ name: 'BISCOTTI BOYS FARM' })
         }).catch(() => {});
 
         // Set Bot Description (French)
@@ -5840,7 +5855,7 @@ async function setupTelegramWebhook() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            description: "💎 SHELF TERPS — Réserve Privée Officielle 💎\nExtractions d'exception, fleurs d'élite & catalogue VIP exclusif."
+            description: "💎 BISCOTTI BOYS FARM — Réserve Privée Officielle 💎\nExtractions d'exception, sélections d'élite & catalogue VIP exclusif."
           })
         }).catch(() => {});
 
@@ -5849,7 +5864,7 @@ async function setupTelegramWebhook() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            short_description: "SHELF TERPS — Réserve Privée Officielle. Fleurs & Extractions d'exception."
+            short_description: "BISCOTTI BOYS FARM — Réserve Privée Officielle. Sélections & Extractions d'exception."
           })
         }).catch(() => {});
       }

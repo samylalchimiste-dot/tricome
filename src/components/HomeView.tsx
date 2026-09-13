@@ -13,10 +13,12 @@ import {
   TrendingUp,
   Search
 } from 'lucide-react';
-import { VideoItem, BrandingSettings, getCleanAuthor } from '../types';
+import { VideoItem, BrandingSettings, getCleanAuthor, SupportedCity, isProductInCity } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import ProductCardMedia from './ProductCardMedia';
 import ExtractionBadge from './ExtractionBadge';
+import CitySelector from './CitySelector';
+import CityMenu from './CityMenu';
 
 interface HomeViewProps {
   branding: BrandingSettings | null;
@@ -31,6 +33,9 @@ interface HomeViewProps {
   onNavigateTab: (tab: 'catalog' | 'categories' | 'contact' | 'info' | 'reviews' | 'profile' | 'favorites') => void;
   triggerHaptic: (style: 'light' | 'medium' | 'heavy') => void;
   showToast?: (msg: string, type?: 'success' | 'error' | 'info') => void;
+  selectedCity: SupportedCity | null;
+  onSelectCity: (city: SupportedCity) => void;
+  onClearCity: () => void;
 }
 
 interface CategoryTab {
@@ -56,7 +61,10 @@ export default function HomeView({
   onQuickAddToCart,
   onNavigateTab,
   triggerHaptic,
-  showToast
+  showToast,
+  selectedCity,
+  onSelectCity,
+  onClearCity
 }: HomeViewProps) {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -84,21 +92,28 @@ export default function HomeView({
     );
   }, [branding]);
 
-  // Luxury Category Tabs with refined icons/emojis
+  // Products filtered strictly for the selected city
+  const cityProducts = useMemo(() => {
+    if (!products) return [];
+    if (!selectedCity) return [];
+    return products.filter((p) => isProductInCity(p, selectedCity));
+  }, [products, selectedCity]);
+
+  // Luxury Category Tabs with refined icons/emojis (based on city's inventory)
   const categoryTabs = useMemo<CategoryTab[]>(() => {
     const baseTabs: CategoryTab[] = [
       { id: 'all', label: 'TOUS', query: 'Tous', icon: Sparkles },
-      { id: 'drysift', label: 'DRYSIFT 90U', query: 'Dry Sift', emoji: '🍯' },
-      { id: 'frozensift', label: 'FROZEN SIFT', query: 'Frozen', emoji: '🧊' },
+      { id: 'frozensift', label: 'FRESH FROZEN', query: 'Frozen', emoji: '🧊' },
+      { id: 'wppf', label: 'WPPF', query: 'WPFF', emoji: '🧈' },
       { id: 'static', label: 'STATIC', query: 'Static', emoji: '🧤' },
-      { id: 'wppf', label: 'WPFF', query: 'WPFF', emoji: '🧈' },
+      { id: 'drysift', label: 'DRYSIFT 90U', query: 'Dry Sift', emoji: '🍯' },
       { id: 'beldia', label: 'BELDIA', query: 'Beldia', emoji: '🇲🇦' },
       { id: 'mousse', label: 'LA MOUSSE', query: 'La Mousse', emoji: '🫧' }
     ];
 
     const knownIds = new Set(['all', 'drysift', 'frozensift', 'static', 'wppf', 'beldia', 'mousse']);
 
-    (products || []).forEach((p) => {
+    (cityProducts || []).forEach((p) => {
       if (p.category && p.category.trim()) {
         const cTrim = p.category.trim();
         const cLower = cTrim.toLowerCase();
@@ -129,15 +144,15 @@ export default function HomeView({
     });
 
     return baseTabs;
-  }, [products]);
+  }, [cityProducts]);
 
-  // Filter products by selected category and search query
+  // Filter products by selected category and search query within current city
   const filteredProducts = useMemo(() => {
-    if (!products) return [];
+    if (!cityProducts) return [];
     const sel = (selectedCategory || 'Tous').toLowerCase().trim();
     const query = searchQuery.toLowerCase().trim();
 
-    return products.filter((p) => {
+    return cityProducts.filter((p) => {
       const cat = (p.category || '').toLowerCase().trim();
 
       // Category matching logic
@@ -169,7 +184,7 @@ export default function HomeView({
 
       return matchesCat && matchesSearch;
     });
-  }, [products, selectedCategory, searchQuery]);
+  }, [cityProducts, selectedCategory, searchQuery]);
 
   const activeTabId = useMemo(() => {
     const sel = (selectedCategory || 'Tous').toLowerCase().trim();
@@ -199,7 +214,7 @@ export default function HomeView({
         <div className="relative aspect-[16/10] sm:aspect-[16/8] w-full overflow-hidden flex items-center justify-center bg-black">
           <img
             src={heroImageUrl}
-            alt="SHELF TERPS"
+            alt="BISCOTTI BOYS BOT"
             className="w-full h-full object-cover object-center"
             loading="eager"
             onError={(e) => {
@@ -250,73 +265,99 @@ export default function HomeView({
         </div>
       </motion.div>
 
-      {/* 3. CATEGORY TABS (HORIZONTAL SMOOTH SLIDER) */}
-      <div className="relative -mx-3 sm:-mx-4 px-3 sm:px-4 pt-1" id="catalog-section">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth">
-          {categoryTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isSelected =
-              tab.id === 'all'
-                ? selectedCategory === 'Tous' || selectedCategory === 'All' || !selectedCategory
-                : activeTabId === tab.id;
+      {/* 3. FLOW: SELECT CITY vs. CITY MENU & PRODUCTS */}
+      {!selectedCity ? (
+        /* STEP 1: CITY SELECTION SCREEN (The user chooses their city first) */
+        <CitySelector
+          selectedCity={selectedCity}
+          onSelectCity={onSelectCity}
+          onClearCity={onClearCity}
+          products={products}
+          triggerHaptic={triggerHaptic}
+        />
+      ) : (
+        /* STEP 2 & 3: CITY MENU & DEDICATED PRODUCTS */
+        <div className="space-y-4">
+          {/* Dedicated City Menu with ← Cities back navigation */}
+          <CityMenu
+            cityId={selectedCity}
+            onBackToCities={onClearCity}
+            selectedCategory={selectedCategory}
+            onSelectCategory={(query) => {
+              setSelectedCategory(query);
+              scrollToCatalog();
+            }}
+            cityProducts={cityProducts}
+            triggerHaptic={triggerHaptic}
+          />
 
-            return (
+          {/* Category Tabs (Horizontal smooth slider) */}
+          <div className="relative -mx-3 sm:-mx-4 px-3 sm:px-4 pt-1" id="catalog-section">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth">
+              {categoryTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isSelected =
+                  tab.id === 'all'
+                    ? selectedCategory === 'Tous' || selectedCategory === 'All' || !selectedCategory
+                    : activeTabId === tab.id;
+
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      triggerHaptic('medium');
+                      setSelectedCategory(tab.query);
+                    }}
+                    className={`relative flex items-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-mono text-xs font-black tracking-wider uppercase whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0 border ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-600/25 text-[#f3e8c8] border-[#e5c158]/80 shadow-[0_0_18px_rgba(229,193,88,0.3)] ring-1 ring-[#e5c158]/40'
+                        : 'bg-zinc-900/80 hover:bg-zinc-800/90 text-zinc-400 hover:text-zinc-200 border-white/[0.08] hover:border-white/20'
+                    }`}
+                  >
+                    {Icon ? (
+                      <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#f3e8c8] animate-pulse' : 'text-zinc-400'}`} />
+                    ) : tab.emoji ? (
+                      <span className="text-xs">{tab.emoji}</span>
+                    ) : null}
+
+                    <span>{tab.label}</span>
+
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeCategoryIndicator"
+                        className="absolute inset-0 rounded-xl border border-[#e5c158]/80 pointer-events-none"
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Catalogue Titre & Compteur */}
+          <div className="pt-2 pb-1 flex items-center justify-between px-1">
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm sm:text-base font-black tracking-wider uppercase bg-gradient-to-r from-[#f8f5ee] via-[#e5c158] to-[#d4af37] bg-clip-text text-transparent drop-shadow-[0_1px_8px_rgba(229,193,88,0.25)]">
+                {selectedCategory === 'Tous' || !selectedCategory ? 'TOUS LES PRODUITS' : selectedCategory.toUpperCase()}
+              </h2>
+
+              <div className="h-3 w-px bg-white/15" />
+
+              <span className="text-[11px] font-mono text-zinc-400 font-medium tracking-tight">
+                {filteredProducts.length} référence{filteredProducts.length > 1 ? 's' : ''}
+              </span>
+            </div>
+
+            {searchQuery && (
               <button
-                key={tab.id}
-                onClick={() => {
-                  triggerHaptic('medium');
-                  setSelectedCategory(tab.query);
-                }}
-                className={`relative flex items-center gap-1.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl font-mono text-xs font-black tracking-wider uppercase whitespace-nowrap transition-all duration-300 cursor-pointer shrink-0 border ${
-                  isSelected
-                    ? 'bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-600/25 text-[#f3e8c8] border-[#e5c158]/80 shadow-[0_0_18px_rgba(229,193,88,0.3)] ring-1 ring-[#e5c158]/40'
-                    : 'bg-zinc-900/80 hover:bg-zinc-800/90 text-zinc-400 hover:text-zinc-200 border-white/[0.08] hover:border-white/20'
-                }`}
+                onClick={() => setSearchQuery('')}
+                className="text-[11px] font-mono text-amber-300/90 hover:text-amber-200 hover:underline transition"
               >
-                {Icon ? (
-                  <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#f3e8c8] animate-pulse' : 'text-zinc-400'}`} />
-                ) : tab.emoji ? (
-                  <span className="text-xs">{tab.emoji}</span>
-                ) : null}
-
-                <span>{tab.label}</span>
-
-                {isSelected && (
-                  <motion.div
-                    layoutId="activeCategoryIndicator"
-                    className="absolute inset-0 rounded-xl border border-[#e5c158]/80 pointer-events-none"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
+                Effacer
               </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 4. CATALOGUE TITRE & COMPTEUR */}
-      <div className="pt-2 pb-1 flex items-center justify-between px-1">
-        <div className="flex items-center gap-3">
-          <h2 className="text-sm sm:text-base font-black tracking-wider uppercase bg-gradient-to-r from-[#f8f5ee] via-[#e5c158] to-[#d4af37] bg-clip-text text-transparent drop-shadow-[0_1px_8px_rgba(229,193,88,0.25)]">
-            {selectedCategory === 'Tous' || !selectedCategory ? 'TOUS LES PRODUITS' : selectedCategory.toUpperCase()}
-          </h2>
-
-          <div className="h-3 w-px bg-white/15" />
-
-          <span className="text-[11px] font-mono text-zinc-400 font-medium tracking-tight">
-            {filteredProducts.length} référence{filteredProducts.length > 1 ? 's' : ''}
-          </span>
-        </div>
-
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="text-[11px] font-mono text-amber-300/90 hover:text-amber-200 hover:underline transition"
-          >
-            Effacer
-          </button>
-        )}
-      </div>
+            )}
+          </div>
 
       {/* 5. GRILLE DE PRODUITS LUXE (2 PAR LIGNE SUR MOBILE) */}
       {filteredProducts.length === 0 ? (
@@ -473,6 +514,22 @@ export default function HomeView({
           })}
         </div>
       )}
+
+      {/* Bottom Switch City Action */}
+      <div className="pt-6 pb-2 text-center">
+        <button
+          onClick={() => {
+            triggerHaptic('medium');
+            onClearCity();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 hover:border-amber-400/40 text-xs font-mono text-zinc-300 hover:text-white transition cursor-pointer"
+        >
+          <span>← Changer de ville (Actuel : {selectedCity.toUpperCase()})</span>
+        </button>
+      </div>
     </div>
+    )}
+  </div>
   );
 }

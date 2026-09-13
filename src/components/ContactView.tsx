@@ -13,7 +13,7 @@ export default function ContactView({ branding, triggerHaptic, showToast }: Cont
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
 
   const telegramChannel = branding?.telegramChannelUrl || 'https://t.me/+bMAog56A3AthODM0';
-  const telegramSupport = branding?.telegramSupportUrl || 'https://t.me/yory47';
+  const telegramSupport = branding?.telegramSupportUrl || 'https://t.me/BISCOTTIBOY10';
   const instagram = branding?.instagramUrl || 'https://instagram.com/north47_lab';
 
   const contacts = [
@@ -22,12 +22,12 @@ export default function ContactView({ branding, triggerHaptic, showToast }: Cont
       title: 'Contact & Support Telegram (Unique)',
       subtitle: 'Liaison directe exclusive, conseils, commandes et assistance 24/7',
       handle: telegramSupport,
-      displayHandle: '@yory47',
+      displayHandle: '@BISCOTTIBOY10',
       badge: 'OFFICIEL 🟢',
       badgeColor: 'bg-amber-500/10 border-amber-500/30 text-amber-300',
       icon: Send,
       color: 'from-amber-950/40 via-zinc-900 to-black border-amber-500/30 hover:border-amber-400',
-      btnText: 'Ouvrir le Contact (@yory47)',
+      btnText: 'Ouvrir le Contact (@BISCOTTIBOY10)',
       btnClass: 'bg-gradient-to-r from-amber-400 to-yellow-500 hover:opacity-95 text-black font-black',
     },
     {
@@ -35,7 +35,7 @@ export default function ContactView({ branding, triggerHaptic, showToast }: Cont
       title: 'Canal Officiel Telegram',
       subtitle: 'Arrivages exclusifs, menus en direct et drops réservés',
       handle: telegramChannel,
-      displayHandle: 'Canal Officiel SHELF TERPS',
+      displayHandle: 'Canal Officiel BISCOTTI BOYS',
       badge: 'CANAL OFFICIEL',
       badgeColor: 'bg-zinc-700/30 border-zinc-600/30 text-zinc-300',
       icon: Send,
