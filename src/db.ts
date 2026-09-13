@@ -426,10 +426,10 @@ export async function getBrandingSettings(): Promise<BrandingSettings> {
       } catch (err) {}
     }
     return {
-      introBgUrl: '',
-      launchScreenUrl: '',
-      homepageHeroBgUrl: '',
-      logoUrl: '',
+      introBgUrl: '/biscotti_boys_farm_logo.jpg',
+      launchScreenUrl: '/biscotti_boys_farm_logo.jpg',
+      homepageHeroBgUrl: '/biscotti_boys_farm_logo.jpg',
+      logoUrl: '/biscotti_boys_farm_logo.jpg',
       introStatusLine: '🌿💎 BISCOTTI BOYS FARM 💎🌿 — RÉSERVE PRIVÉE',
       sectionTitles: defaultTitles
     };

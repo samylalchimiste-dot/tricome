@@ -28,9 +28,10 @@ if (isProductionRunner && process.env.NODE_ENV !== 'production') {
 }
 
 // Environment variable configuration for Telegram Bot
-const OFFICIAL_TELEGRAM_BOT_TOKEN = '8667387039:AAEsJV5UCIIqQnpsxGMGLlKbyvc0xuOZGW0';
+const OFFICIAL_TELEGRAM_BOT_TOKEN = '8896695027:AAF_Q-zVxdGnOUs_KUTvIVyWQbwcjWoJ_80';
 let isMenuButtonMethodFrozen = false;
 if (!process.env.TELEGRAM_BOT_TOKEN || 
+    process.env.TELEGRAM_BOT_TOKEN.includes('8667387039') ||
     process.env.TELEGRAM_BOT_TOKEN.includes('8969801090') ||
     process.env.TELEGRAM_BOT_TOKEN.includes('8665081769') ||
     process.env.TELEGRAM_BOT_TOKEN.includes('8761666672') ||
@@ -56,6 +57,7 @@ if (!process.env.TELEGRAM_BOT_TOKEN ||
 function getTelegramBotToken(): string {
   const token = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
   if (!token || 
+      token.includes('8667387039') ||
       token.includes('8969801090') ||
       token.includes('8665081769') ||
       token.includes('8761666672') ||
@@ -1587,10 +1589,10 @@ const DEFAULT_PRODUCTS: any[] = [];
 
 // Default application visual branding customizations
 const DEFAULT_SETTINGS = {
-  introBgUrl: '/shelf_terps_bot_avatar.jpg',
-  launchScreenUrl: '/shelf_terps_bot_avatar.jpg',
-  homepageHeroBgUrl: '/shelf_terps_bot_avatar.jpg',
-  logoUrl: '/shelf_terps_bot_avatar.jpg',
+  introBgUrl: '/biscotti_boys_farm_logo.jpg',
+  launchScreenUrl: '/biscotti_boys_farm_logo.jpg',
+  homepageHeroBgUrl: '/biscotti_boys_farm_logo.jpg',
+  logoUrl: '/biscotti_boys_farm_logo.jpg',
   telegramChannelUrl: 'https://t.me/+bMAog56A3AthODM0',
   telegramSupportUrl: 'https://t.me/BISCOTTIBOY10',
   introStatusLine: 'BISCOTTI BOYS FARM — RÉSERVE PRIVÉE',
@@ -2801,8 +2803,13 @@ async function syncLocalToFirestoreIfNeeded() {
           needsUpdate = true;
         }
 
-        if (data.promoImageUrl && data.promoImageUrl.includes('aliens')) {
-          data.promoImageUrl = data.logoUrl || '';
+        if (!data.logoUrl || data.logoUrl !== '/biscotti_boys_farm_logo.jpg') {
+          data.logoUrl = '/biscotti_boys_farm_logo.jpg';
+          needsUpdate = true;
+        }
+
+        if (!data.promoImageUrl || data.promoImageUrl !== '/biscotti_boys_farm_logo.jpg') {
+          data.promoImageUrl = '/biscotti_boys_farm_logo.jpg';
           needsUpdate = true;
         }
         
@@ -4934,7 +4941,7 @@ async function sendInstagramPromoMessage(chatId: string | number): Promise<{ suc
   let promoUrl1 = "";
   let promoBtnLabel2 = "";
   let promoUrl2 = "";
-  let promoImageUrl = "/shelf_terps_bot_avatar.jpg";
+  let promoImageUrl = "/biscotti_boys_farm_logo.jpg";
 
   try {
     const freshSettings = loadSettingsFromDisk();
@@ -4982,25 +4989,60 @@ async function sendInstagramPromoMessage(chatId: string | number): Promise<{ suc
   // Attempt to broadcast using sendPhoto if promoImageUrl is available
   if (promoImageUrl) {
     try {
-      const photoPayload = {
-        chat_id: chatId,
-        photo: promoImageUrl,
-        caption: promoMessage,
-        reply_markup: {
-          inline_keyboard
+      let localPromoFile = null;
+      if (promoImageUrl.startsWith('/')) {
+        const potentialPath = path.join(process.cwd(), 'public', promoImageUrl.slice(1));
+        if (fs.existsSync(potentialPath)) {
+          localPromoFile = potentialPath;
         }
-      };
-
-      const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(photoPayload)
-      });
-      const result = await res.json() as any;
-      if (result && result.ok) {
-        return { success: true, messageId: result.result?.message_id };
+      } else if (!promoImageUrl.startsWith('http')) {
+        const potentialPath = path.join(process.cwd(), 'public', promoImageUrl);
+        if (fs.existsSync(potentialPath)) {
+          localPromoFile = potentialPath;
+        }
       }
-      console.warn(`[TELEGRAM BROADCAST INFO] sendPhoto returned false for ${chatId}, falling back to sendMessage...`, result);
+
+      if (localPromoFile) {
+        const fileBuf = fs.readFileSync(localPromoFile);
+        const ext = path.extname(localPromoFile).toLowerCase();
+        const mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
+        const blob = new Blob([fileBuf], { type: mimeType });
+        const formData = new FormData();
+        formData.append('chat_id', String(chatId));
+        formData.append('photo', blob, path.basename(localPromoFile));
+        formData.append('caption', promoMessage);
+        formData.append('reply_markup', JSON.stringify({ inline_keyboard }));
+
+        const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+          method: 'POST',
+          body: formData
+        });
+        const result = await res.json() as any;
+        if (result && result.ok) {
+          return { success: true, messageId: result.result?.message_id };
+        }
+        console.warn(`[TELEGRAM BROADCAST INFO] FormData sendPhoto returned false for ${chatId}, falling back to sendMessage...`, result);
+      } else {
+        const photoPayload = {
+          chat_id: chatId,
+          photo: promoImageUrl,
+          caption: promoMessage,
+          reply_markup: {
+            inline_keyboard
+          }
+        };
+
+        const res = await fetch(`https://api.telegram.org/bot${token}/sendPhoto`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(photoPayload)
+        });
+        const result = await res.json() as any;
+        if (result && result.ok) {
+          return { success: true, messageId: result.result?.message_id };
+        }
+        console.warn(`[TELEGRAM BROADCAST INFO] sendPhoto returned false for ${chatId}, falling back to sendMessage...`, result);
+      }
     } catch (photoErr) {
       console.error(`[TELEGRAM BROADCAST ERROR] sendPhoto failed for ${chatId}, trying fallback:`, photoErr);
     }
@@ -5248,6 +5290,8 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
 
         // 1. Try sending local bot emblem photo via multipart FormData directly to Telegram
         const candidateLogoPaths = [
+          path.join(process.cwd(), 'public', 'biscotti_boys_farm_logo.jpg'),
+          path.join(process.cwd(), 'public', 'bot_biscotti_boys_farm_welcome.jpg'),
           path.join(process.cwd(), 'public', 'shelf_terps_bot_avatar.jpg'),
           path.join(process.cwd(), 'public', 'shelf_terps_logo.jpg'),
           path.join(process.cwd(), 'public', 'bot_welcome_tricoma.jpg'),
@@ -5291,7 +5335,7 @@ async function processTelegramUpdate(body: any, source: string = 'polling') {
         if (!photoSucceeded) {
           const fallbackPhotoUrl = (logoUrl && logoUrl.startsWith('http')) 
             ? logoUrl 
-            : 'https://tricome-production.up.railway.app/bot_welcome_tricoma.jpg';
+            : `${appUrl}/biscotti_boys_farm_logo.jpg`;
           try {
             const photoPayload = {
               chat_id: chatId,
