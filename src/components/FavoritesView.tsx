@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { Heart, Compass, Trash2 } from 'lucide-react';
-import { VideoItem } from '../types';
+import { VideoItem, getProductDisplayPrice } from '../types';
 import ProductCardMedia from './ProductCardMedia';
 import ExtractionBadge from './ExtractionBadge';
 
@@ -98,9 +98,14 @@ export default function FavoritesView({
                   <ExtractionBadge product={p} variant="card-tag" />
                   <h4 className="text-xs font-bold text-white line-clamp-1">{p.title}</h4>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono font-extrabold text-orange-400">
-                      {isAcc ? `${p.price} €` : `${p.price} €/g`}
-                    </span>
+                    {(() => {
+                      const display = getProductDisplayPrice(p);
+                      return (
+                        <span className="text-xs font-mono font-extrabold text-orange-400">
+                          {display.label ? `${display.label} ` : ''}{display.price} €
+                        </span>
+                      );
+                    })()}
                     <button className="px-2 py-0.5 rounded bg-orange-500 text-black text-[9px] font-mono font-bold">
                       Voir
                     </button>

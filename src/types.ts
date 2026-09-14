@@ -241,8 +241,8 @@ export function getAvailableQuantities(product: VideoItem): string[] {
   return getSizeOptionsForCategory(product.category);
 }
 
-export function getProductPriceForQuantity(product: VideoItem, quantity: string): number {
-  if (product.pricing && typeof product.pricing === 'object') {
+export function getProductPriceForQuantity(product: VideoItem, quantity?: string | null): number {
+  if (quantity && product.pricing && typeof product.pricing === 'object') {
     const qKey = quantity.trim() as QuantityOption;
     if (product.pricing[qKey] !== undefined && typeof product.pricing[qKey] === 'number') {
       return product.pricing[qKey]!;
@@ -254,7 +254,8 @@ export function getProductPriceForQuantity(product: VideoItem, quantity: string)
       }
     }
   }
-  return getPriceForSize(product.price, quantity, product.category);
+  // Le prix saisi par l'administrateur est définitif : aucun calcul automatique ni multiplication
+  return typeof product.price === 'number' ? product.price : (Number(product.price) || 0);
 }
 
 export function getProductDisplayPrice(product: VideoItem): { price: number; label?: string } {
@@ -267,30 +268,13 @@ export function getProductDisplayPrice(product: VideoItem): { price: number; lab
       return { price: minEntry[1], label: `dès ${minEntry[0]}` };
     }
   }
-  return { price: product.price };
+  const rawPrice = typeof product.price === 'number' ? product.price : (Number(product.price) || 0);
+  return { price: rawPrice };
 }
 
-export function getPriceForSize(basePricePerGram: number, size: string, category?: string): number {
-  const cat = (category || '').trim().toLowerCase();
-  
-  if (cat.includes('accessoire') || cat.includes('accessories')) {
-    const matches = size.match(/(\d+)/);
-    if (matches) {
-      const units = parseInt(matches[1], 10);
-      return basePricePerGram * units;
-    }
-    return basePricePerGram;
-  }
-  
-  const matches = size.match(/(\d+(?:\.\d+)?)/);
-  if (matches) {
-    let grams = parseFloat(matches[1]);
-    if (size.toLowerCase().includes('kg')) {
-      grams = grams * 1000;
-    }
-    return basePricePerGram * grams;
-  }
-  return basePricePerGram;
+export function getPriceForSize(basePrice: number, _size?: string, _category?: string): number {
+  // Aucun calcul automatique : le prix posé est définitif
+  return typeof basePrice === 'number' ? basePrice : (Number(basePrice) || 0);
 }
 
 export interface Reward {

@@ -299,7 +299,7 @@ export default function ProductDetailModal({
                       animate={{ opacity: 1 }}
                       className="text-xl font-mono font-black text-amber-300"
                     >
-                      {(product.category || '').toLowerCase().includes('accessoire') ? `${product.price} €` : `${product.price} € / 100G`}
+                      {product.price} €
                     </motion.span>
                   ) : (
                     <motion.span 
