@@ -41,6 +41,16 @@ export function isProductInCity(product: VideoItem, cityId?: SupportedCity | str
   return true;
 }
 
+export type QuantityOption = '50g' | '100g' | '500g' | '1kg';
+export const QUANTITY_OPTIONS: QuantityOption[] = ['50g', '100g', '500g', '1kg'];
+
+export interface QuantityPricing {
+  '50g'?: number;
+  '100g'?: number;
+  '500g'?: number;
+  '1kg'?: number;
+}
+
 export interface VideoItem {
   id: string;
   title: string;
@@ -68,6 +78,7 @@ export interface VideoItem {
   status?: string;
   stock?: number;
   wholesalePrice?: number;
+  pricing?: QuantityPricing;
 }
 
 export function getCleanAuthor(author?: string): string {
@@ -83,6 +94,8 @@ export interface CartItem {
   id: string;
   product: VideoItem;
   selectedSize: string;
+  selectedQuantity?: string;
+  unitPrice?: number;
   selectedColor: { name: string; hex: string; imageUrl: string };
   quantity: number;
   totalPrice: number;
@@ -100,12 +113,16 @@ export interface Order {
   paymentMethod: 'card' | 'apple_pay' | 'paypal' | 'cod';
   items: {
     productId: string;
+    productName?: string;
     title: string;
     price: number;
+    totalPrice?: number;
     category: string;
     selectedSize: string;
+    selectedQuantity?: string;
     selectedColor: string;
-    quantity: number;
+    quantity: number | string;
+    packCount?: number;
   }[];
   totalAmount: number;
   date: string;
@@ -204,6 +221,53 @@ export function getSizeOptionsForCategory(category?: string): string[] {
 export function getDefaultSizeForProduct(product: VideoItem): string {
   const options = getSizeOptionsForCategory(product.category);
   return options[0] || '100G';
+}
+
+export function hasConfiguredQuantityPricing(product: VideoItem): boolean {
+  if (!product.pricing || typeof product.pricing !== 'object') return false;
+  return QUANTITY_OPTIONS.some((qty) => {
+    const p = product.pricing?.[qty];
+    return typeof p === 'number' && !isNaN(p) && p > 0;
+  });
+}
+
+export function getAvailableQuantities(product: VideoItem): string[] {
+  if (hasConfiguredQuantityPricing(product)) {
+    return QUANTITY_OPTIONS.filter((qty) => {
+      const p = product.pricing?.[qty];
+      return typeof p === 'number' && !isNaN(p) && p > 0;
+    });
+  }
+  return getSizeOptionsForCategory(product.category);
+}
+
+export function getProductPriceForQuantity(product: VideoItem, quantity: string): number {
+  if (product.pricing && typeof product.pricing === 'object') {
+    const qKey = quantity.trim() as QuantityOption;
+    if (product.pricing[qKey] !== undefined && typeof product.pricing[qKey] === 'number') {
+      return product.pricing[qKey]!;
+    }
+    const lower = quantity.toLowerCase().replace(/\s+/g, '');
+    for (const [key, val] of Object.entries(product.pricing)) {
+      if (key.toLowerCase().replace(/\s+/g, '') === lower && typeof val === 'number') {
+        return val;
+      }
+    }
+  }
+  return getPriceForSize(product.price, quantity, product.category);
+}
+
+export function getProductDisplayPrice(product: VideoItem): { price: number; label?: string } {
+  if (hasConfiguredQuantityPricing(product)) {
+    const validEntries = Object.entries(product.pricing!).filter(
+      ([_, val]) => typeof val === 'number' && !isNaN(val) && val > 0
+    ) as [QuantityOption, number][];
+    if (validEntries.length > 0) {
+      const minEntry = validEntries.reduce((prev, curr) => (curr[1] < prev[1] ? curr : prev));
+      return { price: minEntry[1], label: `dès ${minEntry[0]}` };
+    }
+  }
+  return { price: product.price };
 }
 
 export function getPriceForSize(basePricePerGram: number, size: string, category?: string): number {

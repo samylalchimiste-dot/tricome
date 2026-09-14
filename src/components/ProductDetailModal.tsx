@@ -18,7 +18,7 @@ import {
   Check,
   Flame
 } from 'lucide-react';
-import { VideoItem, getPriceForSize, getSizeOptionsForCategory, getCleanAuthor } from '../types';
+import { VideoItem, getPriceForSize, getSizeOptionsForCategory, getCleanAuthor, hasConfiguredQuantityPricing, getAvailableQuantities, getProductPriceForQuantity } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import ExtractionBadge from './ExtractionBadge';
 
@@ -45,9 +45,13 @@ export default function ProductDetailModal({
 }: ProductDetailModalProps) {
   const { t } = useLanguage();
 
+  const hasQuantityPricing = useMemo(() => {
+    return hasConfiguredQuantityPricing(product);
+  }, [product]);
+
   const sizeOptions = useMemo(() => {
-    return getSizeOptionsForCategory(product.category);
-  }, [product.category]);
+    return getAvailableQuantities(product);
+  }, [product]);
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
@@ -60,15 +64,18 @@ export default function ProductDetailModal({
   }, [product]);
 
   useEffect(() => {
-    setSelectedSize(null);
+    // Automatically select the first available quantity
+    const available = getAvailableQuantities(product);
+    setSelectedSize(available.length > 0 ? available[0] : null);
   }, [product.id]);
 
   const computedPrice = useMemo(() => {
-    if (!selectedSize) {
+    const targetSize = selectedSize || sizeOptions[0];
+    if (!targetSize) {
       return product.price;
     }
-    return getPriceForSize(product.price, selectedSize, product.category);
-  }, [product.price, selectedSize, product.category]);
+    return getProductPriceForQuantity(product, targetSize);
+  }, [product, selectedSize, sizeOptions]);
   
   const selectedColor = useMemo(() => {
     const list = product.colors && product.colors.length > 0 ? product.colors : DEFAULT_COLORS;
@@ -320,13 +327,21 @@ export default function ProductDetailModal({
 
             {/* Size / Weight Selector */}
             <div className="space-y-2">
-              <span className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider block">
-                CHOISISSEZ LE FORMAT / GRAMMAGE :
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider block">
+                  {hasQuantityPricing ? 'CHOISISSEZ LA QUANTITÉ :' : 'CHOISISSEZ LE FORMAT / GRAMMAGE :'}
+                </span>
+                {selectedSize && (
+                  <span className="text-[10px] font-mono text-amber-400 font-bold">
+                    {selectedSize} • €{computedPrice}
+                  </span>
+                )}
+              </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className={`grid gap-2 ${sizeOptions.length === 4 ? 'grid-cols-4' : sizeOptions.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
                 {sizeOptions.map((sz) => {
                   const isSelected = selectedSize === sz;
+                  const optionPrice = getProductPriceForQuantity(product, sz);
                   return (
                     <button
                       key={sz}
@@ -336,15 +351,18 @@ export default function ProductDetailModal({
                         triggerHaptic('medium');
                         setSelectedSize(sz);
                       }}
-                      className={`py-2 px-1 text-xs font-mono font-black rounded-xl border tracking-wide transition-all duration-300 cursor-pointer ${
+                      className={`py-2 px-1 text-center rounded-xl border tracking-wide transition-all duration-300 cursor-pointer ${
                         isOutOfStock
                           ? 'bg-zinc-900 border-white/5 text-zinc-600 cursor-not-allowed opacity-50'
                           : isSelected 
-                            ? 'bg-amber-400 border-amber-300 text-black shadow-[0_0_12px_rgba(245,158,11,0.5)]' 
+                            ? 'bg-amber-400 border-amber-300 text-black shadow-[0_0_12px_rgba(245,158,11,0.5)] font-bold' 
                             : 'bg-zinc-900/90 border-white/10 text-zinc-300 hover:border-amber-400/50 hover:text-amber-300'
                       }`}
                     >
-                      {sz}
+                      <div className="text-xs font-mono font-black">{sz}</div>
+                      <div className={`text-[10px] font-mono mt-0.5 ${isSelected ? 'text-black/90 font-bold' : 'text-amber-300/80 font-medium'}`}>
+                        €{optionPrice}
+                      </div>
                     </button>
                   );
                 })}

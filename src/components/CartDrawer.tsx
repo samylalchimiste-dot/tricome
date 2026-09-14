@@ -203,15 +203,23 @@ export default function CartDrawer({
       address: `${methodLabels[deliveryMethod] || 'Livraison'} : ${address.trim() || city.trim()} ${deliveryNotes ? `(${deliveryNotes})` : ''}`,
       zipCode: zipCode.trim() || '00000',
       paymentMethod: paymentMethod === 'crypto' ? 'card' : 'cod',
-      items: cart.map(item => ({
-        productId: item.product.id,
-        title: item.product.title,
-        price: item.totalPrice,
-        category: item.product.category,
-        selectedSize: item.selectedSize,
-        selectedColor: item.selectedColor.name,
-        quantity: item.quantity
-      })),
+      items: cart.map(item => {
+        const unitPrice = item.unitPrice || (item.totalPrice / (item.quantity || 1));
+        const selectedQty = item.selectedQuantity || item.selectedSize;
+        return {
+          productId: item.product.id,
+          productName: item.product.title,
+          title: item.product.title,
+          price: unitPrice,
+          totalPrice: item.totalPrice,
+          category: item.product.category,
+          selectedSize: selectedQty,
+          selectedQuantity: selectedQty,
+          quantity: selectedQty,
+          packCount: item.quantity,
+          selectedColor: item.selectedColor.name
+        };
+      }),
       totalAmount: finalTotalToPay,
       date: new Date().toISOString(),
       status: 'pending',
@@ -240,7 +248,11 @@ export default function CartDrawer({
   const handleCopyOrderSummary = () => {
     if (!createdOrder) return;
     triggerHaptic('light');
-    const itemsList = createdOrder.items.map(i => `• ${i.title} (${i.selectedSize}) x${i.quantity} = ${i.price}€`).join('\n');
+    const itemsList = createdOrder.items.map(i => {
+      const qtyLabel = i.selectedQuantity || i.selectedSize || i.quantity;
+      const count = i.packCount || 1;
+      return `• ${i.title} (${qtyLabel}) ${count > 1 ? `x${count} ` : ''}= ${i.totalPrice || (i.price * count)}€`;
+    }).join('\n');
     const text = `🛍️ COMMANDE BISCOTTI BOYS BOT\nID: #${createdOrder.id}\nClient: ${createdOrder.customerName}\nContact: ${createdOrder.phoneNumber || createdOrder.email}\nLivraison: ${createdOrder.address}\n\nArticles:\n${itemsList}\n\nTotal: ${createdOrder.totalAmount}€\nStatut: En attente de validation`;
     
     navigator.clipboard.writeText(text);
@@ -381,13 +393,18 @@ export default function CartDrawer({
                           {item.product.title}
                         </h4>
                         <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-400">
-                          <span className="px-1.5 py-0.5 rounded bg-black/60 border border-white/10 text-amber-300 font-bold">
-                            {item.selectedSize}
+                          <span className="px-1.5 py-0.5 rounded bg-black/60 border border-amber-400/30 text-amber-300 font-bold">
+                            {item.selectedQuantity || item.selectedSize}
                           </span>
                           <span>{item.product.category}</span>
                         </div>
                         <div className="text-xs font-mono font-black text-amber-300">
                           {item.totalPrice} €
+                          {item.quantity > 1 && (
+                            <span className="text-[9px] text-zinc-400 font-normal ml-1">
+                              ({item.unitPrice || Math.round(item.totalPrice / item.quantity)} € / u)
+                            </span>
+                          )}
                         </div>
                       </div>
 

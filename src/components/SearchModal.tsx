@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, X, Plus, Sparkles, Check, MapPin } from 'lucide-react';
-import { VideoItem, SupportedCity, isProductInCity, SUPPORTED_CITIES } from '../types';
+import { VideoItem, SupportedCity, isProductInCity, SUPPORTED_CITIES, getProductDisplayPrice } from '../types';
 import ProductCardMedia from './ProductCardMedia';
 import ExtractionBadge from './ExtractionBadge';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -146,9 +146,17 @@ export default function SearchModal({
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-xs font-mono font-black text-amber-400">
-                        {p.price} €
-                      </span>
+                      {(() => {
+                        const display = getProductDisplayPrice(p);
+                        return (
+                          <div className="text-right">
+                            {display.label && <div className="text-[8px] font-mono text-zinc-400 leading-none">Dès</div>}
+                            <span className="text-xs font-mono font-black text-amber-400">
+                              {display.price} €
+                            </span>
+                          </div>
+                        );
+                      })()}
 
                       {onQuickAddToCart && (
                         <button

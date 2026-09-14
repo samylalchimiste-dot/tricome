@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 
 import { getProducts, DEFAULT_PRODUCTS, getBrandingSettings, verifyAccess, verifyAdminPassword, getAdminPasswordToken, getReviews, getUserProfile, getMyOrders } from './db';
-import { VideoItem, CartItem, BrandingSettings, getPriceForSize, getDefaultSizeForProduct, ReviewItem, UserProfile, Order, SupportedCity, SUPPORTED_CITIES } from './types';
+import { VideoItem, CartItem, BrandingSettings, getPriceForSize, getDefaultSizeForProduct, ReviewItem, UserProfile, Order, SupportedCity, SUPPORTED_CITIES, getProductPriceForQuantity, getAvailableQuantities } from './types';
 
 import { useLanguage } from './i18n/LanguageContext';
 
@@ -404,12 +404,14 @@ export default function App() {
   // Add to cart with price calculation
   const handleAddToCart = (product: VideoItem, size: string, color: { name: string; hex: string; imageUrl: string }) => {
     triggerHaptic('light', 'Ajouté au panier');
-    const price = getPriceForSize(product.price, size, product.category);
+    const price = getProductPriceForQuantity(product, size);
 
     const cartItem: CartItem = {
       id: `${product.id}-${size}-${color.name}`,
       product,
       selectedSize: size,
+      selectedQuantity: size,
+      unitPrice: price,
       selectedColor: color,
       quantity: 1,
       totalPrice: price
@@ -422,10 +424,12 @@ export default function App() {
         updated = prev.map((item, i) => {
           if (i === idx) {
             const newQty = item.quantity + 1;
+            const unitPrice = item.unitPrice || getProductPriceForQuantity(item.product, item.selectedSize);
             return {
               ...item,
+              unitPrice,
               quantity: newQty,
-              totalPrice: getPriceForSize(item.product.price, item.selectedSize, item.product.category) * newQty
+              totalPrice: unitPrice * newQty
             };
           }
           return item;
@@ -444,14 +448,17 @@ export default function App() {
   // Quick Add from Home / Catalog card
   const handleQuickAddToCart = (product: VideoItem) => {
     triggerHaptic('medium');
-    const defaultSize = getDefaultSizeForProduct(product);
+    const available = getAvailableQuantities(product);
+    const defaultSize = available[0] || getDefaultSizeForProduct(product);
     const defaultColor = { name: 'Edition Réserve', hex: '#D4AF37', imageUrl: product.thumbnailUrl };
-    const price = getPriceForSize(product.price, defaultSize, product.category);
+    const price = getProductPriceForQuantity(product, defaultSize);
 
     const cartItem: CartItem = {
       id: `${product.id}-${defaultSize}-${defaultColor.name}`,
       product,
       selectedSize: defaultSize,
+      selectedQuantity: defaultSize,
+      unitPrice: price,
       selectedColor: defaultColor,
       quantity: 1,
       totalPrice: price
@@ -464,10 +471,12 @@ export default function App() {
         updated = prev.map((item, i) => {
           if (i === idx) {
             const newQty = item.quantity + 1;
+            const unitPrice = item.unitPrice || getProductPriceForQuantity(item.product, item.selectedSize);
             return {
               ...item,
+              unitPrice,
               quantity: newQty,
-              totalPrice: getPriceForSize(item.product.price, item.selectedSize, item.product.category) * newQty
+              totalPrice: unitPrice * newQty
             };
           }
           return item;
@@ -483,12 +492,14 @@ export default function App() {
   // Instant buy: clear or add and open cart directly
   const handleInstantBuy = (product: VideoItem, size: string, color: { name: string; hex: string; imageUrl: string }) => {
     triggerHaptic('medium', 'Instant Buy');
-    const price = getPriceForSize(product.price, size, product.category);
+    const price = getProductPriceForQuantity(product, size);
 
     const cartItem: CartItem = {
       id: `${product.id}-${size}-${color.name}`,
       product,
       selectedSize: size,
+      selectedQuantity: size,
+      unitPrice: price,
       selectedColor: color,
       quantity: 1,
       totalPrice: price

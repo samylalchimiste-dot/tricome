@@ -35,7 +35,7 @@ import {
   ChevronDown,
   User
 } from 'lucide-react';
-import { VideoItem, Order, BrandingSettings, SectionTitle, WhitelistItem, Reward, PromoCode, PendingApproval, MarqueeItem, DEFAULT_MARQUEE_CONFIG, SupportedCity, SUPPORTED_CITIES } from '../types';
+import { VideoItem, Order, BrandingSettings, SectionTitle, WhitelistItem, Reward, PromoCode, PendingApproval, MarqueeItem, DEFAULT_MARQUEE_CONFIG, SupportedCity, SUPPORTED_CITIES, QuantityOption, QUANTITY_OPTIONS, QuantityPricing } from '../types';
 import { addProduct, deleteProduct, getOrders, updateOrderStatus, deleteOrder, getBrandingSettings, updateBrandingSettings, uploadFileRaw, getWhitelist, addWhitelistItem, deleteWhitelistItem, setAdminPasswordToken, clearAdminPasswordToken, getConnectionLogs, deleteConnectionLog, triggerTelegramBroadcast, getTelegramBroadcastStatus, resetTelegramBroadcastStatus, undoLastTelegramBroadcast, editLastTelegramBroadcast, deleteTelegramMessageManual, editTelegramMessageManual, getAllUsersProfile, getRewards, saveReward, deleteReward, getPromoCodes, savePromoCode, deletePromoCode, getPendingApprovals, approvePendingRequest, rejectPendingRequest } from '../db';
 
 const isVideoUrl = (url?: string): boolean => {
@@ -517,6 +517,21 @@ export default function AdminPanel({
   };
   const [newBadgeType, setNewBadgeType] = useState<string>('NONE');
   const [newBadgePromo, setNewBadgePromo] = useState<string>('-10%');
+
+  // Quantity-based pricing states
+  const [newQuantityPricing, setNewQuantityPricing] = useState<Record<QuantityOption, string | number>>({
+    '50g': '',
+    '100g': '',
+    '500g': '',
+    '1kg': ''
+  });
+
+  const [editQuantityPricing, setEditQuantityPricing] = useState<Record<QuantityOption, string | number>>({
+    '50g': '',
+    '100g': '',
+    '500g': '',
+    '1kg': ''
+  });
   
   // Native files and media preview states with upload loading states to prevent base64 leaks
   const [videoPreviewUrl, setVideoPreviewUrl] = useState<string>('');
@@ -1050,12 +1065,29 @@ export default function AdminPanel({
 
     try {
       const uId = `omerta-custom-${Date.now()}`;
+
+      // Clean quantity pricing object - only store valid positive numbers
+      const cleanedPricing: QuantityPricing = {};
+      QUANTITY_OPTIONS.forEach((qty) => {
+        const val = newQuantityPricing[qty];
+        if (val !== '' && val !== null && val !== undefined) {
+          const num = Number(val);
+          if (!isNaN(num) && num > 0) {
+            cleanedPricing[qty] = num;
+          }
+        }
+      });
+      const hasPricing = Object.keys(cleanedPricing).length > 0;
+      const primaryPrice = hasPricing
+        ? (cleanedPricing['100g'] || cleanedPricing['50g'] || cleanedPricing['500g'] || cleanedPricing['1kg'] || Number(newPrice))
+        : Number(newPrice);
+
       const freshProd: VideoItem = {
         id: uId,
         title: newTitle.toUpperCase(),
         description: newDesc,
-        price: Number(newPrice),
-        pricePerGram: Number(newPrice),
+        price: primaryPrice,
+        pricePerGram: primaryPrice,
         currency: 'EUR',
         category: newCategory,
         city: newCities.length > 0 ? newCities[0] : undefined,
@@ -1070,14 +1102,15 @@ export default function AdminPanel({
         thumbnailUrl: photoPreviewUrl || '/input_file_2.png',
         additionalPhotos: extraPhotosUrls,
         badge: newBadgeType === 'NONE' ? undefined : (newBadgeType === 'PROMO' ? newBadgePromo : newBadgeType),
-        wholesalePrice: Number(newWholesalePrice) || undefined
+        wholesalePrice: Number(newWholesalePrice) || undefined,
+        pricing: hasPricing ? cleanedPricing : undefined
       };
 
       // Call addProduct directly as clear JSON payload (no blobs anymore, no base64 parsing!)
       await addProduct(freshProd);
 
       triggerHaptic('success');
-      setSuccessMsg(`"${newTitle}" a été créé avec succès et tarifé à ${newPrice} €.`);
+      setSuccessMsg(`"${newTitle}" a été créé avec succès et tarifé à ${primaryPrice} €.`);
       setErrorMsg('');
       
       // Reset variables
@@ -1091,6 +1124,12 @@ export default function AdminPanel({
       setExtraPhotosUrls([]);
       setNewBadgeType('NONE');
       setNewBadgePromo('-10%');
+      setNewQuantityPricing({
+        '50g': '',
+        '100g': '',
+        '500g': '',
+        '1kg': ''
+      });
 
       await onRefreshProducts();
       setTimeout(() => setSuccessMsg(''), 4000);
@@ -1105,6 +1144,13 @@ export default function AdminPanel({
   const startEditing = (p: VideoItem) => {
     triggerHaptic('light');
     setEditingProduct({ ...p });
+    // Load existing quantity prices or reset to empty
+    setEditQuantityPricing({
+      '50g': p.pricing?.['50g'] !== undefined ? p.pricing['50g'] : '',
+      '100g': p.pricing?.['100g'] !== undefined ? p.pricing['100g'] : '',
+      '500g': p.pricing?.['500g'] !== undefined ? p.pricing['500g'] : '',
+      '1kg': p.pricing?.['1kg'] !== undefined ? p.pricing['1kg'] : ''
+    });
     const form = document.getElementById('edit-form-anchor');
     if (form) form.scrollIntoView({ behavior: 'smooth' });
   };
@@ -1117,7 +1163,25 @@ export default function AdminPanel({
     triggerHaptic('heavy');
 
     try {
-      await addProduct(editingProduct);
+      // Clean quantity pricing object - only store valid positive numbers
+      const cleanedPricing: QuantityPricing = {};
+      QUANTITY_OPTIONS.forEach((qty) => {
+        const val = editQuantityPricing[qty];
+        if (val !== '' && val !== null && val !== undefined) {
+          const num = Number(val);
+          if (!isNaN(num) && num > 0) {
+            cleanedPricing[qty] = num;
+          }
+        }
+      });
+      const hasPricing = Object.keys(cleanedPricing).length > 0;
+
+      const updatedProduct: VideoItem = {
+        ...editingProduct,
+        pricing: hasPricing ? cleanedPricing : undefined
+      };
+
+      await addProduct(updatedProduct);
       triggerHaptic('success');
       setSuccessMsg(`"${editingProduct.title}" mis à jour.`);
       setEditingProduct(null);
@@ -1427,7 +1491,7 @@ export default function AdminPanel({
                   </div>
 
                   <div>
-                    <label className="block text-[8px] font-mono text-gray-500 uppercase mb-1">Prix de vente (€) :</label>
+                    <label className="block text-[8px] font-mono text-gray-500 uppercase mb-1">Prix par défaut (€) :</label>
                     <input
                       type="number"
                       value={newPrice}
@@ -1436,6 +1500,41 @@ export default function AdminPanel({
                       min="1"
                       required
                     />
+                  </div>
+                </div>
+
+                {/* QUANTITY PRICING SYSTEM */}
+                <div className="p-3.5 bg-black/60 rounded-xl border border-amber-500/20 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[9px] font-mono text-[#D4AF37] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-[#D4AF37]" />
+                      <span>QUANTITY PRICING (TARIFS PAR QUANTITÉ) :</span>
+                    </label>
+                    <span className="text-[7.5px] font-mono text-zinc-500 uppercase">
+                      Prix indépendants (€)
+                    </span>
+                  </div>
+                  <p className="text-[8px] text-zinc-400 font-mono">
+                    Chaque quantité a son propre tarif. Les quantités laissées vides ne seront pas affichées au client.
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {QUANTITY_OPTIONS.map((qty) => (
+                      <div key={qty} className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-mono font-black text-amber-300">{qty}</span>
+                          <span className="text-[7.5px] font-mono text-zinc-500">€ EUR</span>
+                        </div>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={newQuantityPricing[qty]}
+                          onChange={(e) => setNewQuantityPricing({ ...newQuantityPricing, [qty]: e.target.value })}
+                          placeholder="ex: 350"
+                          className="w-full text-xs py-1.5 px-2 rounded bg-black border border-zinc-800 focus:border-[#D4AF37] outline-none text-white font-mono"
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1824,7 +1923,7 @@ export default function AdminPanel({
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[8px] text-gray-500">PRIX DE VENTE (€) :</label>
+                      <label className="block text-[8px] text-gray-500">PRIX PAR DÉFAUT (€) :</label>
                       <input
                         type="number"
                         value={editingProduct.pricePerGram || editingProduct.price || ''}
@@ -1854,6 +1953,41 @@ export default function AdminPanel({
                         <option value="FROZEN">FROZEN SIFT</option>
                         <option value="WPFF">WPFF</option>
                       </select>
+                    </div>
+                  </div>
+
+                  {/* QUANTITY PRICING EDITING */}
+                  <div className="p-3 bg-black/60 rounded-xl border border-amber-500/20 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-[8.5px] font-mono text-[#D4AF37] font-bold uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles className="w-3 h-3 text-[#D4AF37]" />
+                        <span>QUANTITY PRICING (TARIFS PAR QUANTITÉ) :</span>
+                      </label>
+                      <span className="text-[7.5px] font-mono text-zinc-500 uppercase">
+                        Prix indépendants (€)
+                      </span>
+                    </div>
+                    <p className="text-[7.5px] text-zinc-400 font-mono">
+                      Modifier les prix par quantité. Laisser vide pour masquer la quantité auprès des clients.
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {QUANTITY_OPTIONS.map((qty) => (
+                        <div key={qty} className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[8.5px] font-mono font-black text-amber-300">{qty}</span>
+                            <span className="text-[7.5px] font-mono text-zinc-500">€ EUR</span>
+                          </div>
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            value={editQuantityPricing[qty]}
+                            onChange={(e) => setEditQuantityPricing({ ...editQuantityPricing, [qty]: e.target.value })}
+                            placeholder="ex: 350"
+                            className="w-full text-xs py-1.5 px-2 rounded bg-black border border-zinc-800 focus:border-[#D4AF37] outline-none text-white font-mono"
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
 

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Heart, Sparkles, ChevronDown, ChevronRight, X } from 'lucide-react';
-import { VideoItem, getCleanAuthor, SupportedCity, isProductInCity } from '../types';
+import { VideoItem, getCleanAuthor, SupportedCity, isProductInCity, getProductDisplayPrice } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import ProductCardMedia from './ProductCardMedia';
 import ExtractionBadge from './ExtractionBadge';
@@ -348,9 +348,21 @@ export default function CatalogView({
                     </div>
 
                     <div className="pt-2 flex items-center justify-between border-t border-white/5">
-                      <span className="text-xs sm:text-sm font-black font-mono text-amber-400">
-                        {p.price} €
-                      </span>
+                      {(() => {
+                        const display = getProductDisplayPrice(p);
+                        return (
+                          <div className="flex items-baseline gap-1">
+                            {display.label && (
+                              <span className="text-[9px] font-mono text-zinc-400">
+                                Dès
+                              </span>
+                            )}
+                            <span className="text-xs sm:text-sm font-black font-mono text-amber-400">
+                              {display.price} €
+                            </span>
+                          </div>
+                        );
+                      })()}
 
                       <span className="text-[10px] font-mono text-zinc-400 group-hover:text-amber-300 transition flex items-center gap-0.5">
                         <span>Voir</span>

@@ -13,7 +13,7 @@ import {
   TrendingUp,
   Search
 } from 'lucide-react';
-import { VideoItem, BrandingSettings, getCleanAuthor, SupportedCity, isProductInCity } from '../types';
+import { VideoItem, BrandingSettings, getCleanAuthor, SupportedCity, isProductInCity, getProductDisplayPrice } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import ProductCardMedia from './ProductCardMedia';
 import ExtractionBadge from './ExtractionBadge';
@@ -481,14 +481,19 @@ export default function HomeView({
 
                   {/* Price & Quick Add Button */}
                   <div className="pt-1 flex items-center justify-between border-t border-white/[0.08]">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] font-mono text-zinc-400 uppercase">
-                        À partir de
-                      </span>
-                      <span className="text-xs sm:text-sm font-mono font-black text-amber-300">
-                        {product.price} {product.currency || '€'}
-                      </span>
-                    </div>
+                    {(() => {
+                      const display = getProductDisplayPrice(product);
+                      return (
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-mono text-zinc-400 uppercase">
+                            {display.label ? display.label : 'À partir de'}
+                          </span>
+                          <span className="text-xs sm:text-sm font-mono font-black text-amber-300">
+                            {display.price} {product.currency || '€'}
+                          </span>
+                        </div>
+                      );
+                    })()}
 
                     {/* Quick Add To Cart Button */}
                     {onQuickAddToCart && !isOutOfStock && (
